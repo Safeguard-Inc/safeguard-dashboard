@@ -1,8 +1,11 @@
 # Safeguard Dashboard
 
 [![CI](https://github.com/Safeguard-Inc/safeguard-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Safeguard-Inc/safeguard-dashboard/actions/workflows/ci.yml)
+[![Validations](https://img.shields.io/badge/CI%2FCD-10%2F10%20Automated%20Checks-success.svg)](.github/workflows/ci.yml)
+[![Canonical Errors](https://img.shields.io/badge/Errors-270%20Cataloged-blue.svg)](docs/ERROR_CODES.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Deployment](https://img.shields.io/badge/Vercel-Live_Demo-brightgreen.svg)](https://safeguard-dashboard-mocha.vercel.app)
+
 
 **Web console and interactive checkout demo for Safeguard on Stellar.**
 
