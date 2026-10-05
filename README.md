@@ -2,10 +2,12 @@
 
 [![CI](https://github.com/Safeguard-Inc/safeguard-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Safeguard-Inc/safeguard-dashboard/actions/workflows/ci.yml)
 [![Validations](https://img.shields.io/badge/CI%2FCD-10%2F10%20Automated%20Checks-success.svg)](.github/workflows/ci.yml)
+[![Pitch Video](https://img.shields.io/badge/Pitch%20Video-5%20Minutes%20(1080p)-4ade9b.svg)](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch.mp4)
 [![Canonical Errors](https://img.shields.io/badge/Errors-270%20Cataloged-blue.svg)](docs/ERROR_CODES.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Deployment](https://img.shields.io/badge/Vercel-Live_Demo-brightgreen.svg)](https://safeguard-dashboard-mocha.vercel.app)
 
+[![Watch the Safeguard Pitch Video](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch-poster.jpg)](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch.mp4)
 
 **Web console and interactive checkout demo for Safeguard on Stellar.**
 
