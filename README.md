@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Safeguard-Inc/safeguard-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Safeguard-Inc/safeguard-dashboard/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Deployment](https://img.shields.io/badge/Vercel-Deployed-brightgreen.svg)](https://safeguard-docs.vercel.app)
+[![Deployment](https://img.shields.io/badge/Vercel-Live_Demo-brightgreen.svg)](https://safeguard-dashboard-mocha.vercel.app)
 
 **Web console and interactive checkout demo for Safeguard on Stellar.**
 
