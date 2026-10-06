@@ -25,7 +25,7 @@ over the active rules, and browse recent activity.
 - [Project structure](#project-structure)
 - [Deployment](#deployment)
 - [Project status and roadmap](#project-status-and-roadmap)
-- [Contributing (Stellar Drips Wave)](#contributing-stellar-drips-wave)
+- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -130,9 +130,9 @@ every push and pull request. Pushes to `main` deploy to
 | 🔜 | Component tests (Vitest + Testing Library) and Playwright smoke test |
 | 🔜 | Accessibility pass and mobile layout |
 
-## Contributing (Stellar Drips Wave)
+## Contributing
 
-Every roadmap item is a scoped issue:
+We welcome community contributions. Every roadmap item is a scoped issue:
 [browse open issues](https://github.com/Safeguard-Inc/safeguard-dashboard/issues).
 Comment to claim one, then fork and branch, and make sure `npm run lint` and
 `npm run build` pass. See [CONTRIBUTING.md](CONTRIBUTING.md).
