@@ -140,3 +140,15 @@ Comment to claim one, then fork and branch, and make sure `npm run lint` and
 ## License
 
 [Apache-2.0](LICENSE)
+## Screenshot Gallery
+
+### Dashboard Overview
+![Dashboard overview](https://via.placeholder.com/800x450?text=Safeguard+Dashboard+-+Overview)
+
+### Wallet Connection
+![Wallet connection](https://via.placeholder.com/800x450?text=Safeguard+-+Wallet+Connection)
+
+### Commitment Management
+![Commitments](https://via.placeholder.com/800x450?text=Safeguard+-+Commitment+Management)
+
+*Screenshots will be updated once the UI is finalized.*
