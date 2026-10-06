@@ -230,6 +230,29 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Interactive Policy Sandbox / Zero-Gas Simulator Mode Banner */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-amber-500/10 border-b border-amber-500/20 px-6 py-2.5 text-xs text-amber-200/90 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center space-x-2">
+          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold text-[10px] uppercase tracking-wider border border-amber-500/30">
+            Interactive Policy Sandbox
+          </span>
+          <span>
+            <strong>Zero-Gas Simulator Mode:</strong> Evaluating scenarios via client-side compliance engine with <strong>24/24 golden parity</strong> against on-chain Rust test fixtures.
+          </span>
+        </div>
+        <div className="flex items-center space-x-3 text-[11px] text-slate-400">
+          <span>Freighter Live Dispatch: <span className="text-amber-400 font-medium">Phase 2 Roadmap</span></span>
+          <a
+            href="https://stellar.expert/explorer/testnet/contract/CDC6KVX7QT7CD3GOVGX44NQUNS7FMSZKIAXTV3TDGSXQKJRQMDZRSRCN"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-400 hover:text-indigo-300 underline flex items-center gap-1"
+          >
+            Verified Testnet Contracts <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      </div>
+
       {/* Hero Stats */}
       <section className="max-w-7xl mx-auto w-full px-6 pt-8 pb-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
