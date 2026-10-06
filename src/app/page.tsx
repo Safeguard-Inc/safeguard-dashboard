@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -40,6 +41,7 @@ const PRESET_ACCOUNTS = {
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'checkout' | 'policies' | 'explorer'>('checkout');
   const [walletConnected, setWalletConnected] = useState(false);
+  const [isFreighter, setIsFreighter] = useState(false);
   const [userAddress, setUserAddress] = useState('GC5MCMHHMFV7GOQ7DVN7MOTMHGTMVIP3YFQAAVFZ6WKUE6SLGQBVODW4');
   const [recipient, setRecipient] = useState(PRESET_ACCOUNTS.COMPLIANT);
   const [amount, setAmount] = useState('50');
@@ -99,6 +101,39 @@ export default function Dashboard() {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleConnectWallet = async () => {
+    if (walletConnected) {
+      setWalletConnected(false);
+      setIsFreighter(false);
+      setUserAddress('GC5MCMHHMFV7GOQ7DVN7MOTMHGTMVIP3YFQAAVFZ6WKUE6SLGQBVODW4');
+      return;
+    }
+
+    try {
+      if (typeof window !== 'undefined') {
+        const connected = await isConnected();
+        if (connected) {
+          const accessObj = await requestAccess();
+          if (accessObj && !accessObj.error) {
+            const addrObj = await getAddress();
+            if (addrObj && addrObj.address) {
+              setUserAddress(addrObj.address);
+              setWalletConnected(true);
+              setIsFreighter(true);
+              return;
+            }
+          }
+        }
+      }
+    } catch {
+      // Freighter not available or rejected
+    }
+
+    // Default to demo account if Freighter not available
+    setWalletConnected(true);
+    setIsFreighter(false);
   };
 
   const handleEvaluateAndPay = () => {
@@ -221,11 +256,18 @@ export default function Dashboard() {
           </div>
 
           <button
-            onClick={() => setWalletConnected(!walletConnected)}
+            onClick={handleConnectWallet}
             className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md shadow-indigo-600/30 active:scale-95"
+            title={walletConnected ? 'Click to disconnect' : 'Connect Freighter or Demo wallet'}
           >
             <Wallet className="h-3.5 w-3.5" />
-            <span>{walletConnected ? 'Demo wallet: GC5M...ODW4' : 'Use demo wallet'}</span>
+            <span>
+              {walletConnected
+                ? isFreighter
+                  ? `Freighter: ${userAddress.substring(0, 4)}...${userAddress.substring(userAddress.length - 4)}`
+                  : `Demo: ${userAddress.substring(0, 4)}...${userAddress.substring(userAddress.length - 4)}`
+                : 'Connect Freighter / Demo'}
+            </span>
           </button>
         </div>
       </header>
