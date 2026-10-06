@@ -33,17 +33,17 @@ interface TxItem {
 }
 
 const PRESET_ACCOUNTS = {
-  COMPLIANT: 'GC2U3YSOCCLOHKADJ4INRHJDFVDMGZX3WWTPH7V62MQWETUD4LR4HDCA',
-  BLOCKED: 'GBLOCKEDWALLET99999999999999999999999999999999999999999999',
+  COMPLIANT: 'GA6LW724VD6PVAG6U3Z3I34D7BOWPO6J7MIJATKGKEC6TYORN4SRCVLT',
+  BLOCKED: 'GCV4I3P3F2OMWYZGRXD5PR5AC3K7MUDSBMKDBPEMJ2MFHLVUAGJEK4DT' // on the live contract's denylist,
 };
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'checkout' | 'policies' | 'explorer'>('checkout');
   const [walletConnected, setWalletConnected] = useState(false);
-  const [userAddress, setUserAddress] = useState('GBBM6WDF6SMPGMBCQXAWOJZZQB65SUWAAK4EDLOH7OQH226BC4STTU3V');
+  const [userAddress, setUserAddress] = useState('GC5MCMHHMFV7GOQ7DVN7MOTMHGTMVIP3YFQAAVFZ6WKUE6SLGQBVODW4');
   const [recipient, setRecipient] = useState(PRESET_ACCOUNTS.COMPLIANT);
   const [amount, setAmount] = useState('50');
-  const [token, setToken] = useState('USDC');
+  const [token, setToken] = useState('XLM');
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -62,36 +62,36 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<TxItem[]>([
     {
       id: 'tx-1',
-      sender: 'GBBM6WDF...U3V',
-      recipient: 'GC2U3YSO...CA',
-      token: 'USDC',
-      amount: '50.00',
+      sender: 'GC5MCMHH...ODW4',
+      recipient: 'GA6LW724...CVLT',
+      token: 'XLM',
+      amount: '50',
       status: 'Approved',
       reason: 'Direct settlement (Within spend cap & compliant recipient)',
-      timestamp: '3 mins ago',
-      txHash: '4c5759298c0364b01d386a5935b964532b04978ea595d96d904d9011f58d64b8',
+      timestamp: 'Testnet 2026-10-05',
+      txHash: 'c762b42f818387aa584ea33d3da006f22671071ed6e182068994ea6597395e6c',
     },
     {
       id: 'tx-2',
-      sender: 'GBBM6WDF...U3V',
-      recipient: 'GC2O7PSL...WV',
-      token: 'USDC',
-      amount: '2,500.00',
+      sender: 'GC5MCMHH...ODW4',
+      recipient: 'GA6LW724...CVLT',
+      token: 'XLM',
+      amount: '150',
       status: 'Escrowed',
-      reason: 'Exceeds instantaneous spend cap ($1,000.00); held in Escrow',
-      timestamp: '12 mins ago',
-      txHash: '1ddad388f914e267b282855ddc8e5478fabfb8542e7798e4402447e5341e3f9a',
+      reason: 'Exceeds the 100 XLM spend cap; held as escrow #1, later released',
+      timestamp: 'Testnet 2026-10-05',
+      txHash: '2d83231685f03b17e1a001e6c82c38453459b4f67b416ef60f9be73133026f0e',
     },
     {
       id: 'tx-3',
-      sender: 'GBBM6WDF...U3V',
-      recipient: 'GBLOCKED...99',
-      token: 'USDC',
-      amount: '100.00',
+      sender: 'GC5MCMHH...ODW4',
+      recipient: 'GCV4I3P3...K4DT',
+      token: 'XLM',
+      amount: '1',
       status: 'Blocked',
-      reason: 'Contract Error #11 (Recipient on active OFAC / Denylist)',
-      timestamp: '25 mins ago',
-      txHash: 'revert_4a2c918f',
+      reason: 'Contract Error #11 (RecipientDenylisted)',
+      timestamp: 'Testnet 2026-10-05',
+      txHash: 'rejected at simulation (no fee)',
     },
   ]);
 
@@ -115,7 +115,7 @@ export default function Dashboard() {
           status: 'Blocked' as const,
           reason: 'Transaction Reverted: Contract Error #11 (RecipientDenylisted). Address is prohibited under active compliance rules.',
           code: 11,
-          txHash: 'revert_' + Math.random().toString(16).substring(2, 10),
+          txHash: 'rejected at simulation (no fee)',
           amount,
           token,
         };
@@ -137,14 +137,14 @@ export default function Dashboard() {
         return;
       }
 
-      // 2. Check if amount exceeds $1,000 spend cap
-      if (numAmount > 1000) {
+      // 2. Check if amount exceeds the live contract's 100 XLM spend cap
+      if (numAmount > 100) {
         const escrowId = Math.floor(Math.random() * 800) + 10;
         const result = {
           status: 'Escrowed' as const,
-          reason: `High Value Transfer ($${numAmount}): Exceeds the $1,000.00 spend cap. Diverted to on-chain Escrow vault #${escrowId} for manual administrator clearance.`,
+          reason: `High Value Transfer ($${numAmount}): Exceeds the 100 XLM spend cap, so the contract diverts it to escrow (simulated id #${escrowId}) for admin release or a timelocked refund.`,
           code: 6,
-          txHash: '1ddad388f914e267b282855ddc8e5478fabfb8542e7798e4402447e5341e3f9a',
+          txHash: '2d83231685f03b17e1a001e6c82c38453459b4f67b416ef60f9be73133026f0e',
           amount,
           token,
           escrowId,
@@ -172,7 +172,7 @@ export default function Dashboard() {
         status: 'Approved' as const,
         reason: 'Payment Approved: Transaction satisfied all active compliance rules and spend limits. Direct SEP-41 SAC token transfer executed.',
         code: 0,
-        txHash: '4c5759298c0364b01d386a5935b964532b04978ea595d96d904d9011f58d64b8',
+        txHash: 'c762b42f818387aa584ea33d3da006f22671071ed6e182068994ea6597395e6c',
         amount,
         token,
       };
@@ -225,7 +225,7 @@ export default function Dashboard() {
             className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md shadow-indigo-600/30 active:scale-95"
           >
             <Wallet className="h-3.5 w-3.5" />
-            <span>{walletConnected ? 'Freighter: G...U3V' : 'Connect Wallet'}</span>
+            <span>{walletConnected ? 'Demo wallet: GC5M...ODW4' : 'Use demo wallet'}</span>
           </button>
         </div>
       </header>
@@ -239,7 +239,7 @@ export default function Dashboard() {
           </div>
           <div className="p-4 rounded-2xl bg-slate-900/40 border border-indigo-950/50 backdrop-blur-sm">
             <p className="text-xs text-slate-400 font-medium">Instantaneous Spend Cap</p>
-            <p className="text-2xl font-bold text-white mt-1">$1,000 <span className="text-xs font-normal text-indigo-300">USDC/tx</span></p>
+            <p className="text-2xl font-bold text-white mt-1">100 <span className="text-xs font-normal text-indigo-300">XLM/tx</span></p>
           </div>
           <div className="p-4 rounded-2xl bg-slate-900/40 border border-indigo-950/50 backdrop-blur-sm">
             <p className="text-xs text-slate-400 font-medium">On-Chain Policy Rules</p>
@@ -308,7 +308,7 @@ export default function Dashboard() {
                 {/* Sender Address */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Sender Account (Freighter)
+                    Sender Account (demo: Testnet admin)
                   </label>
                   <div className="flex items-center space-x-2 px-3.5 py-2.5 bg-slate-950/70 border border-indigo-950/80 rounded-xl text-xs text-slate-300 font-mono">
                     <span className="truncate flex-1">{userAddress}</span>
@@ -564,9 +564,9 @@ export default function Dashboard() {
                   </div>
                   <h3 className="font-bold text-white text-sm mb-1">Instant Spend Cap</h3>
                   <p className="text-xs text-slate-400 mb-4">
-                    Any payment exceeding $1,000.00 is automatically diverted into on-chain Escrow.
+                    Any payment above 100 XLM is diverted into on-chain escrow (live contract config).
                   </p>
-                  <div className="text-xs font-mono text-indigo-300">Threshold: 1,000.00 USDC</div>
+                  <div className="text-xs font-mono text-indigo-300">Threshold: 1000000000 stroops (100 XLM)</div>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-slate-950/60 border border-indigo-900/40">

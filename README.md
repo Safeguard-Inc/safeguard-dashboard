@@ -1,169 +1,142 @@
 # Safeguard Dashboard
 
 [![CI](https://github.com/Safeguard-Inc/safeguard-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Safeguard-Inc/safeguard-dashboard/actions/workflows/ci.yml)
-[![Validations](https://img.shields.io/badge/CI%2FCD-10%2F10%20Automated%20Checks-success.svg)](.github/workflows/ci.yml)
-[![Pitch Video](https://img.shields.io/badge/Pitch%20Video-5%20Minutes%20(1080p)-4ade9b.svg)](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch.mp4)
-[![Canonical Errors](https://img.shields.io/badge/Errors-270%20Cataloged-blue.svg)](docs/ERROR_CODES.md)
+[![Live](https://img.shields.io/badge/Vercel-live-black?logo=vercel)](https://safeguard-dashboard-mocha.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000)](https://nextjs.org)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Deployment](https://img.shields.io/badge/Vercel-Live_Console-brightgreen.svg)](https://safeguard-dashboard-mocha.vercel.app)
-[![Next.js](https://img.shields.io/badge/Next.js-14%20App%20Router-black.svg)](https://nextjs.org)
-[![Freighter](https://img.shields.io/badge/Wallet-Freighter%20Testnet-purple.svg)](https://freighter.app)
 
-[![Watch the Safeguard Pitch Video](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch-poster.jpg)](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch.mp4)
+**Operator console for Safeguard policy-guarded payments on Stellar.** Try a
+payment, see whether the contract would approve, escrow or block it, look
+over the active rules, and browse recent activity.
 
-**Institutional Web3 operator console and payment terminal for Safeguard policy-guarded payments on Stellar.**
+**Live:** **<https://safeguard-dashboard-mocha.vercel.app>**
 
-Safeguard Dashboard connects institutional treasury managers, compliance officers, and merchant operations directly to Soroban smart contracts on Stellar Testnet.
+[![Watch the five-minute Safeguard pitch](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch-poster.jpg)](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch.mp4)
 
 ---
 
-## The Four-Tier Stack
+## Table of contents
 
-| Repository | Role | Technology |
+- [The Safeguard stack](#the-safeguard-stack)
+- [Features](#features)
+- [Try these scenarios](#try-these-scenarios)
+- [How it works](#how-it-works)
+- [Getting started](#getting-started)
+- [Project structure](#project-structure)
+- [Deployment](#deployment)
+- [Project status and roadmap](#project-status-and-roadmap)
+- [Contributing (Stellar Drips Wave)](#contributing-stellar-drips-wave)
+- [License](#license)
+
+---
+
+## The Safeguard stack
+
+| Repository | What it is | Tech |
 | :--- | :--- | :--- |
-| [**`safeguard-contracts`**](https://github.com/Safeguard-Inc/safeguard-contracts) | Smart Contracts & Policy Engine | Rust, Soroban SDK, `no_std` |
-| [**`safeguard-backend`**](https://github.com/Safeguard-Inc/safeguard-backend) | Pre-flight Simulation SDK & REST API | TypeScript, Node.js, Express |
-| **`safeguard-dashboard`** (this repo) | Institutional Web3 Console | Next.js 14, Freighter, Tailwind |
-| [**`safeguard-docs`**](https://github.com/Safeguard-Inc/safeguard-docs) | Documentation Hub & Simulator | Static Web, Vercel |
+| [`safeguard-contracts`](https://github.com/Safeguard-Inc/safeguard-contracts) | On-chain payments gateway, escrow and policy registry | Rust, Soroban SDK |
+| [`safeguard-backend`](https://github.com/Safeguard-Inc/safeguard-backend) | TypeScript SDK and REST API | TypeScript, Express |
+| **`safeguard-dashboard`** (this repo) | Operator console | Next.js 14, React 18, Tailwind |
+| [`safeguard-docs`](https://github.com/Safeguard-Inc/safeguard-docs) | Docs site, live engine demo, pitch video | Static HTML/ESM |
 
----
+## Features
 
-## Architecture Overview
+| Tab | What you can do |
+| :--- | :--- |
+| **Payment Simulator & Checkout** | Enter a recipient and amount, get an Approved / Escrowed / Blocked verdict with the contract's reason code, and open the matching real Testnet transaction |
+| **Policy Rules** | See the live contract configuration: 100 XLM spend cap, denylist screening, 24 h escrow timelock |
+| **Explorer** | Activity feed seeded with the real Testnet transactions from the end-to-end run, with links to StellarExpert |
 
-```text
-┌──────────────────────────────────────────────────────────┐
-│                   Safeguard Dashboard                    │
-│                 (Next.js 14 App Router)                  │
-│                                                          │
-│  ┌────────────────────┐          ┌────────────────────┐  │
-│  │ Freighter Wallet   │          │ Real-Time Telemetry│  │
-│  │ Connect / Sign XDR │          │ Indexed Stream     │  │
-│  └─────────┬──────────┘          └─────────▲──────────┘  │
-│            │                               │             │
-│  ┌─────────▼──────────┐          ┌─────────┴──────────┐  │
-│  │ Merchant Terminal  │          │ Policy Governance  │  │
-│  │ SAC Direct/Escrow  │          │ Caps, Allow/Deny   │  │
-│  └─────────┬──────────┘          └─────────▲──────────┘  │
-└────────────┼───────────────────────────────┼─────────────┘
-             │                               │
-             ▼                               │
-┌──────────────────────────────────────────────────────────┐
-│           Soroban RPC Node (Stellar Testnet)             │
-│                                                          │
-│  • Payments Gateway: CBH4XG6K5XJHY3QMVUP7LGB4BFFG4C3X... │
-│  • Policy Engine:    CAQI3YI244YV7QGZ5VODUUGKFX6C4XND... │
-│  • Native SAC Token: CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNI... │
-└──────────────────────────────────────────────────────────┘
+## Try these scenarios
+
+The console uses the same addresses and limits as the live contract
+[`CDC6KVX7…SRCN`](https://stellar.expert/explorer/testnet/contract/CDC6KVX7QT7CD3GOVGX44NQUNS7FMSZKIAXTV3TDGSXQKJRQMDZRSRCN):
+
+| Scenario | Input | Verdict | Same outcome on chain |
+| :--- | :--- | :--- | :--- |
+| Normal payment | Compliant recipient, 50 XLM | ✅ Approved, code 0 | [`c762b42f…`](https://stellar.expert/explorer/testnet/tx/c762b42f818387aa584ea33d3da006f22671071ed6e182068994ea6597395e6c) |
+| High value | Compliant recipient, 150 XLM | 🟡 Escrowed, code 6 | [`2d832316…`](https://stellar.expert/explorer/testnet/tx/2d83231685f03b17e1a001e6c82c38453459b4f67b416ef60f9be73133026f0e) |
+| Denylisted | Blocked recipient preset | ⛔ Blocked, code 11 | Rejected at simulation, no fee |
+
+## How it works
+
+```mermaid
+flowchart LR
+    UI["Checkout form"] --> Rules{"Contract rules, mirrored client-side"}
+    Rules -->|"recipient denylisted"| B["Blocked #11"]
+    Rules -->|"amount > 100 XLM"| E["Escrowed #6"]
+    Rules -->|"otherwise"| A["Approved #0"]
+    A --> Feed["Explorer feed"]
+    E --> Feed
+    B --> Feed
 ```
 
----
+> [!NOTE]
+> **Current scope: simulator.** Verdicts are computed in the browser using the
+> same rule order as `SafeguardPayments.pay()`, and the wallet is a demo
+> identity (the Testnet admin). Nothing is signed or submitted from the UI
+> yet. Connecting Freighter and submitting real `pay()` transactions is the
+> top roadmap item. `@stellar/freighter-api` is already a dependency.
 
-## Key Features
+## Getting started
 
-### 1. Merchant Payment Terminal
-* Execute policy-guarded payments using native SEP-41 Stellar Asset Contract (SAC) tokens (XLM, USDC, EURC).
-* Real-time amount calculation and stroop gas fee estimation.
-* Seamless branching: payments under the spend cap settle directly; high-value payments divert automatically into on-chain escrow.
-
-### 2. Multi-Sig Policy Governance
-* Dynamic spend cap adjustment with instant Soroban simulation.
-* Real-time allowlist and denylist wallet management.
-* Emergency circuit breaker: contract-wide pause and resume controls.
-
-### 3. Escrow Vault Management
-* Inspect locked escrow deposits, timestamped release windows, and depositor/beneficiary identities.
-* One-click admin release for compliant high-value transfers.
-* Timelocked depositor refund execution after the escrow holding period expires.
-
-### 4. Canonical 270 Error Codes Inspector
-* Integrated lookup tool for all 270 cataloged error codes across 9 system domains.
-* Provides non-technical plain English explanations and actionable remediation steps for compliance failures.
-
-### 5. Live Telemetry Stream
-* Visual feed of approved, escrowed, and blocked payments.
-* Filter by status, token, or counterparty address.
-* Instant CSV and JSON audit export for regulatory reporting.
-
----
-
-## Live Stellar Testnet Deployments
-
-| Contract / Entity | Address / Contract ID | Role |
-| :--- | :--- | :--- |
-| **Safeguard Payments Gateway** | `CBH4XG6K5XJHY3QMVUP7LGB4BFFG4C3XQ5Z64K7Z5OC66UDF4RAGRXYZ` | Payments & Escrow Vault |
-| **Safeguard Policy Engine** | `CAQI3YI244YV7QGZ5VODUUGKFX6C4XNDQ2Y64K7Z5OC66UDF4RAGRP4V` | Deterministic Rule Engine |
-| **Native SAC Token (SEP-41)** | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | Testnet XLM / SAC Token |
-| **Multi-Sig Admin** | `GDIYQ7X5E22P3H75YQ7LOUXFX6C4XNDQ2Y64K7Z5OC66UDF4RAGRP4V` | Governance Authority |
-
----
-
-## Environment Variables
-
-Configure `.env.local` or Vercel Project Settings:
-
-```env
-# Soroban RPC Endpoint
-NEXT_PUBLIC_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
-
-# Stellar Network Passphrase
-NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-
-# Smart Contract IDs
-NEXT_PUBLIC_PAYMENTS_CONTRACT_ID=CBH4XG6K5XJHY3QMVUP7LGB4BFFG4C3XQ5Z64K7Z5OC66UDF4RAGRXYZ
-NEXT_PUBLIC_POLICY_CONTRACT_ID=CAQI3YI244YV7QGZ5VODUUGKFX6C4XNDQ2Y64K7Z5OC66UDF4RAGRP4V
-NEXT_PUBLIC_DEFAULT_SAC_TOKEN=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
-
-# Backend Integration (Optional)
-NEXT_PUBLIC_BACKEND_API_URL=https://api.safeguard.inc
-```
-
----
-
-## Getting Started
-
-### Prerequisites
-* Node.js 20+
-* [Freighter Wallet](https://www.freighter.app/) browser extension configured for **Testnet**.
-* Test XLM from the [Stellar Friendbot](https://laboratory.stellar.org/#account-creator?network=test).
-
-### Local Setup
+**Prerequisites:** Node.js 20 or later.
 
 ```bash
-# Clone the repository
 git clone https://github.com/Safeguard-Inc/safeguard-dashboard
 cd safeguard-dashboard
-
-# Install dependencies
 npm ci
-
-# Start development server
-npm run dev
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the console.
+| Script | Purpose |
+| :--- | :--- |
+| `npm run dev` | Dev server with hot reload |
+| `npm run lint` | ESLint (`next/core-web-vitals`) |
+| `npm run build` | Production build |
+| `npm start` | Serve the production build |
 
-### Production Build
+## Project structure
 
-```bash
-# Compile and optimize production bundle
-npm run build
-
-# Start production server locally
-npm start
+```text
+safeguard-dashboard/
+├── src/app/
+│   ├── layout.tsx       # Root layout, fonts, metadata
+│   ├── page.tsx         # Console: checkout, policies, explorer tabs
+│   └── globals.css      # Tailwind layers and theme
+├── lib/errorCatalog.ts  # Error-code catalog (shared with safeguard-backend)
+├── docs/ERROR_CODES.md  # Human-readable catalog
+└── tailwind.config.ts
 ```
 
----
+## Deployment
 
-## 🌊 Contributing & Stellar Drips Wave Sprints
+Hosted on **Vercel** (project `safeguard-dashboard`). CI in
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs lint and build on
+every push and pull request. Pushes to `main` deploy to
+<https://safeguard-dashboard-mocha.vercel.app>.
 
-We participate in the **Stellar Drips Wave** sprint program!
+## Project status and roadmap
 
-Browse our **[Issue Backlog](https://github.com/Safeguard-Inc/safeguard-dashboard/issues)**:
-* Issues are tagged with `Stellar Wave` and complexity ratings (`complexity: trivial`, `complexity: small`, `complexity: medium`).
-* Focus areas: Freighter wallet session persistence, dark/light theme polish, responsive mobile layout, and CSV export.
+| Status | Item |
+| :---: | :--- |
+| ✅ | Checkout simulator matching the live contract's rules and limits |
+| ✅ | Policy view and activity feed backed by real Testnet transactions |
+| 🔜 | **Freighter connect**: real wallet address and network check |
+| 🔜 | **Submit real `pay()`** through the Stellar SDK, then show the receipt and tx link |
+| 🔜 | Read `get_config` / `is_denylisted` from Soroban RPC instead of mirroring them |
+| 🔜 | Escrow admin panel (`release_escrow` / `refund_escrow`) |
+| 🔜 | Fetch the explorer feed from `safeguard-backend` `/api/transactions` |
+| 🔜 | Component tests (Vitest + Testing Library) and Playwright smoke test |
+| 🔜 | Accessibility pass and mobile layout |
 
----
+## Contributing (Stellar Drips Wave)
+
+Every roadmap item is a scoped issue:
+[browse open issues](https://github.com/Safeguard-Inc/safeguard-dashboard/issues).
+Comment to claim one, then fork and branch, and make sure `npm run lint` and
+`npm run build` pass. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Licensed under the Apache License, Version 2.0 ([LICENSE](LICENSE)).
+[Apache-2.0](LICENSE)
