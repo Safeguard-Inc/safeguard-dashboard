@@ -11,7 +11,7 @@ over the active rules, and browse recent activity.
 
 **Live:** **<https://safeguard-dashboard-mocha.vercel.app>**
 
-[![Watch the five-minute Safeguard pitch](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch-poster.jpg)](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch.mp4)
+[![Watch the Safeguard pitch video (<2 min)](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch-poster.jpg)](https://safeguard-docs.vercel.app/assets/video/safeguard-pitch.mp4)
 
 ---
 
