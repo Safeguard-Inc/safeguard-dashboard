@@ -5,6 +5,7 @@ import { fetchLiveConfig } from '@/lib/contractConfig';
 import { checkIsDenylisted } from '@/lib/denylistCheck';
 import { fetchTransactions, FALLBACK_TRANSACTIONS } from '@/lib/api';
 import type { TxItem } from '@/types/tx';
+import EscrowPanel from '@/components/EscrowPanel';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
@@ -31,7 +32,7 @@ const PRESET_ACCOUNTS = {
 };
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'checkout' | 'policies' | 'explorer'>('checkout');
+  const [activeTab, setActiveTab] = useState<'checkout' | 'policies' | 'explorer' | 'escrow'>('checkout');
   const [walletConnected, setWalletConnected] = useState(false);
   const [isFreighter, setIsFreighter] = useState(false);
   const [userAddress, setUserAddress] = useState('GC5MCMHHMFV7GOQ7DVN7MOTMHGTMVIP3YFQAAVFZ6WKUE6SLGQBVODW4');
@@ -415,6 +416,17 @@ export default function Dashboard() {
             <Activity className="h-4 w-4" />
             <span>Telemetry & Explorer</span>
           </button>
+          <button
+            onClick={() => setActiveTab('escrow')}
+            className={`pb-3 font-medium flex items-center space-x-2 border-b-2 transition-all ${
+              activeTab === 'escrow'
+                ? 'border-indigo-500 text-white'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Building className="h-4 w-4" />
+            <span>Escrow Vault</span>
+          </button>
         </div>
       </div>
 
@@ -797,6 +809,9 @@ export default function Dashboard() {
               </table>
             </div>
           </div>
+        )}
+        {activeTab === 'escrow' && (
+          <EscrowPanel walletConnected={walletConnected} />
         )}
       </main>
 
