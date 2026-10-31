@@ -103,38 +103,69 @@ export default function Dashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const [freighterNotInstalled, setFreighterNotInstalled] = useState(false);
+
   const handleConnectWallet = async () => {
     if (walletConnected) {
       setWalletConnected(false);
       setIsFreighter(false);
+      setFreighterNotInstalled(false);
       setUserAddress('GC5MCMHHMFV7GOQ7DVN7MOTMHGTMVIP3YFQAAVFZ6WKUE6SLGQBVODW4');
       return;
     }
 
     try {
       if (typeof window !== 'undefined') {
-        const connected = await isConnected();
-        if (connected) {
-          const accessObj = await requestAccess();
-          if (accessObj && !accessObj.error) {
-            const addrObj = await getAddress();
-            if (addrObj && addrObj.address) {
-              setUserAddress(addrObj.address);
-              setWalletConnected(true);
-              setIsFreighter(true);
-              return;
-            }
-          }
+        // Check if Freighter extension is installed
+        const connectedResult = await isConnected();
+        const isInstalled = typeof connectedResult === 'object'
+          ? (connectedResult as { isConnected: boolean }).isConnected
+          : Boolean(connectedResult);
+
+        if (!isInstalled) {
+          // Extension not present — surface install prompt
+          setFreighterNotInstalled(true);
+          return;
+        }
+
+        setFreighterNotInstalled(false);
+
+        // Request permission to access the user's public key
+        const accessResult = await requestAccess();
+        const accessError = typeof accessResult === 'object' && 'error' in accessResult
+          ? (accessResult as { error: string }).error
+          : null;
+
+        if (accessError) {
+          // User rejected access
+          return;
+        }
+
+        // Fetch the active account address
+        const addrResult = await getAddress();
+        const address = typeof addrResult === 'object' && 'address' in addrResult
+          ? (addrResult as { address: string }).address
+          : typeof addrResult === 'string' ? addrResult : null;
+
+        if (address) {
+          setUserAddress(address);
+          setWalletConnected(true);
+          setIsFreighter(true);
+          return;
         }
       }
     } catch {
-      // Freighter not available or rejected
+      // Freighter threw unexpectedly — fall through to demo
     }
 
-    // Default to demo account if Freighter not available
+    // Fall back to demo account
     setWalletConnected(true);
     setIsFreighter(false);
   };
+
+  /** Returns first 6 + last 4 chars of a Stellar G-address */
+  const truncateAddress = (addr: string) =>
+    addr.length > 10 ? `${addr.substring(0, 6)}…${addr.substring(addr.length - 4)}` : addr;
 
   const handleEvaluateAndPay = () => {
     setIsProcessing(true);
@@ -255,8 +286,21 @@ export default function Dashboard() {
             <span>Stellar Testnet</span>
           </div>
 
+          {freighterNotInstalled && (
+            <a
+              href="https://freighter.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 transition-all"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>Install Freighter</span>
+            </a>
+          )}
+
           <button
             onClick={handleConnectWallet}
+            aria-label={walletConnected ? 'Disconnect wallet' : 'Connect Freighter wallet'}
             className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md shadow-indigo-600/30 active:scale-95"
             title={walletConnected ? 'Click to disconnect' : 'Connect Freighter or Demo wallet'}
           >
@@ -264,9 +308,9 @@ export default function Dashboard() {
             <span>
               {walletConnected
                 ? isFreighter
-                  ? `Freighter: ${userAddress.substring(0, 4)}...${userAddress.substring(userAddress.length - 4)}`
-                  : `Demo: ${userAddress.substring(0, 4)}...${userAddress.substring(userAddress.length - 4)}`
-                : 'Connect Freighter / Demo'}
+                  ? `${truncateAddress(userAddress)}`
+                  : `Demo: ${truncateAddress(userAddress)}`
+                : 'Connect Freighter'}
             </span>
           </button>
         </div>
