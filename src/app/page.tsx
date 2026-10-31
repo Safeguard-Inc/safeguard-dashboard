@@ -6,6 +6,7 @@ import { checkIsDenylisted } from '@/lib/denylistCheck';
 import { fetchTransactions, FALLBACK_TRANSACTIONS } from '@/lib/api';
 import type { TxItem } from '@/types/tx';
 import EscrowPanel from '@/components/EscrowPanel';
+import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
@@ -296,10 +297,7 @@ export default function Dashboard() {
 
         {/* Network & Wallet Controls */}
         <div className="flex items-center space-x-3">
-          <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Stellar Testnet</span>
-          </div>
+          <NetworkStatusBadge />
 
           {freighterNotInstalled && (
             <a
