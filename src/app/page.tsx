@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { fetchLiveConfig } from '@/lib/contractConfig';
 import { checkIsDenylisted } from '@/lib/denylistCheck';
+import { fetchTransactions, FALLBACK_TRANSACTIONS } from '@/lib/api';
+import type { TxItem } from '@/types/tx';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
@@ -22,18 +24,6 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-
-interface TxItem {
-  id: string;
-  sender: string;
-  recipient: string;
-  token: string;
-  amount: string;
-  status: 'Approved' | 'Escrowed' | 'Blocked';
-  reason: string;
-  timestamp: string;
-  txHash: string;
-}
 
 const PRESET_ACCOUNTS = {
   COMPLIANT: 'GA6LW724VD6PVAG6U3Z3I34D7BOWPO6J7MIJATKGKEC6TYORN4SRCVLT',
@@ -64,6 +54,34 @@ export default function Dashboard() {
     });
   }, []);
 
+  // Poll /api/transactions every 30 seconds; merge new remote rows above local ones
+  useEffect(() => {
+    const loadTxs = async () => {
+      const remote = await fetchTransactions();
+      setTransactions((prev) => {
+        // Preserve any locally-added rows (id starts with tx-) that aren't in remote
+        const localOnly = prev.filter(
+          (p) => p.id.startsWith('tx-') && !remote.find((r) => r.id === p.id)
+        );
+        return [...localOnly, ...remote];
+      });
+      setLastUpdated(new Date());
+    };
+
+    loadTxs();
+    const interval = setInterval(loadTxs, 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Tick the "X seconds ago" counter every second
+  useEffect(() => {
+    if (!lastUpdated) return;
+    const tick = setInterval(() => {
+      setSecondsAgo(Math.floor((Date.now() - lastUpdated.getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [lastUpdated]);
+
   // Outcome state
   const [verdict, setVerdict] = useState<{
     status: 'Approved' | 'Escrowed' | 'Blocked';
@@ -75,42 +93,10 @@ export default function Dashboard() {
     escrowId?: number;
   } | null>(null);
 
-  // Transactions list
-  const [transactions, setTransactions] = useState<TxItem[]>([
-    {
-      id: 'tx-1',
-      sender: 'GC5MCMHH...ODW4',
-      recipient: 'GA6LW724...CVLT',
-      token: 'XLM',
-      amount: '50',
-      status: 'Approved',
-      reason: 'Direct settlement (Within spend cap & compliant recipient)',
-      timestamp: 'Testnet 2026-10-05',
-      txHash: 'c762b42f818387aa584ea33d3da006f22671071ed6e182068994ea6597395e6c',
-    },
-    {
-      id: 'tx-2',
-      sender: 'GC5MCMHH...ODW4',
-      recipient: 'GA6LW724...CVLT',
-      token: 'XLM',
-      amount: '150',
-      status: 'Escrowed',
-      reason: 'Exceeds the 100 XLM spend cap; held as escrow #1, later released',
-      timestamp: 'Testnet 2026-10-05',
-      txHash: '2d83231685f03b17e1a001e6c82c38453459b4f67b416ef60f9be73133026f0e',
-    },
-    {
-      id: 'tx-3',
-      sender: 'GC5MCMHH...ODW4',
-      recipient: 'GCV4I3P3...K4DT',
-      token: 'XLM',
-      amount: '1',
-      status: 'Blocked',
-      reason: 'Contract Error #11 (RecipientDenylisted)',
-      timestamp: 'Testnet 2026-10-05',
-      txHash: 'rejected at simulation (no fee)',
-    },
-  ]);
+  // Transactions list — seeded with fallback data, replaced by live API on mount
+  const [transactions, setTransactions] = useState<TxItem[]>(FALLBACK_TRANSACTIONS);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [secondsAgo, setSecondsAgo] = useState<number>(0);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -755,7 +741,12 @@ export default function Dashboard() {
                 <h2 className="text-lg font-bold text-white mb-1">Live Payment Telemetry</h2>
                 <p className="text-xs text-slate-400">Recent transactions evaluated by Safeguard on Stellar Testnet.</p>
               </div>
-              <div className="flex items-center space-x-2 text-xs">
+              <div className="flex items-center space-x-3 text-xs">
+                {lastUpdated && (
+                  <span className="text-slate-500">
+                    Last updated: {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`}
+                  </span>
+                )}
                 <span className="text-slate-400">Indexed via:</span>
                 <span className="px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-300 font-mono">Soroban RPC</span>
               </div>
