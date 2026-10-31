@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { fetchLiveConfig } from '@/lib/contractConfig';
+import { checkIsDenylisted } from '@/lib/denylistCheck';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
@@ -53,6 +54,8 @@ export default function Dashboard() {
   // Live policy config fetched from Soroban RPC on mount
   const [spendCapXlm, setSpendCapXlm] = useState<number>(100);
   const [configLoading, setConfigLoading] = useState(true);
+  const [denylistWarning, setDenylistWarning] = useState<string | null>(null);
+  const [denylistChecking, setDenylistChecking] = useState(false);
 
   useEffect(() => {
     fetchLiveConfig().then((cfg) => {
@@ -179,78 +182,35 @@ export default function Dashboard() {
   const truncateAddress = (addr: string) =>
     addr.length > 10 ? `${addr.substring(0, 6)}…${addr.substring(addr.length - 4)}` : addr;
 
-  const handleEvaluateAndPay = () => {
+  const handleEvaluateAndPay = async () => {
     setIsProcessing(true);
     setVerdict(null);
+    setDenylistWarning(null);
 
-    setTimeout(() => {
-      setIsProcessing(false);
-      const numAmount = parseFloat(amount) || 0;
+    const numAmount = parseFloat(amount) || 0;
 
-      // 1. Check if recipient is blocked
-      if (recipient === PRESET_ACCOUNTS.BLOCKED) {
-        const result = {
-          status: 'Blocked' as const,
-          reason: 'Transaction Reverted: Contract Error #11 (RecipientDenylisted). Address is prohibited under active compliance rules.',
-          code: 11,
-          txHash: 'rejected at simulation (no fee)',
-          amount,
-          token,
-        };
-        setVerdict(result);
-        setTransactions((prev) => [
-          {
-            id: `tx-${Date.now()}`,
-            sender: userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 4),
-            recipient: recipient.substring(0, 8) + '...' + recipient.substring(recipient.length - 4),
-            token,
-            amount: numAmount.toLocaleString(),
-            status: 'Blocked',
-            reason: 'Contract Error #11 (RecipientDenylisted)',
-            timestamp: 'Just now',
-            txHash: result.txHash,
-          },
-          ...prev,
-        ]);
-        return;
-      }
+    // 0. Live denylist check via Soroban RPC before any simulation
+    setDenylistChecking(true);
+    const isLiveDenylisted = await checkIsDenylisted(recipient).catch(() => false);
+    setDenylistChecking(false);
 
-      // 2. Check if amount exceeds the live contract's spend cap
-      if (numAmount > spendCapXlm) {
-        const escrowId = Math.floor(Math.random() * 800) + 10;
-        const result = {
-          status: 'Escrowed' as const,
-          reason: `High Value Transfer ($${numAmount}): Exceeds the ${spendCapXlm} XLM spend cap, so the contract diverts it to escrow (simulated id #${escrowId}) for admin release or a timelocked refund.`,
-          code: 6,
-          txHash: '2d83231685f03b17e1a001e6c82c38453459b4f67b416ef60f9be73133026f0e',
-          amount,
-          token,
-          escrowId,
-        };
-        setVerdict(result);
-        setTransactions((prev) => [
-          {
-            id: `tx-${Date.now()}`,
-            sender: userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 4),
-            recipient: recipient.substring(0, 8) + '...' + recipient.substring(recipient.length - 4),
-            token,
-            amount: numAmount.toLocaleString(),
-            status: 'Escrowed',
-            reason: `Exceeds spend cap; held in Escrow #${escrowId}`,
-            timestamp: 'Just now',
-            txHash: result.txHash,
-          },
-          ...prev,
-        ]);
-        return;
-      }
+    if (isLiveDenylisted) {
+      setDenylistWarning(
+        `⚠ On-chain denylist hit: ${recipient.substring(0, 8)}…${recipient.substring(recipient.length - 4)} is flagged in the live contract state.`
+      );
+    }
 
-      // 3. Approved
+    // Simulate with a brief delay to represent contract invocation round-trip
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setIsProcessing(false);
+
+    // 1. Check if recipient is blocked (hardcoded preset OR live check)
+    if (recipient === PRESET_ACCOUNTS.BLOCKED || isLiveDenylisted) {
       const result = {
-        status: 'Approved' as const,
-        reason: 'Payment Approved: Transaction satisfied all active compliance rules and spend limits. Direct SEP-41 SAC token transfer executed.',
-        code: 0,
-        txHash: 'c762b42f818387aa584ea33d3da006f22671071ed6e182068994ea6597395e6c',
+        status: 'Blocked' as const,
+        reason: 'Transaction Reverted: Contract Error #11 (RecipientDenylisted). Address is prohibited under active compliance rules.',
+        code: 11,
+        txHash: 'rejected at simulation (no fee)',
         amount,
         token,
       };
@@ -262,14 +222,70 @@ export default function Dashboard() {
           recipient: recipient.substring(0, 8) + '...' + recipient.substring(recipient.length - 4),
           token,
           amount: numAmount.toLocaleString(),
-          status: 'Approved',
-          reason: 'Direct settlement (Within spend cap & compliant recipient)',
+          status: 'Blocked',
+          reason: 'Contract Error #11 (RecipientDenylisted)',
           timestamp: 'Just now',
           txHash: result.txHash,
         },
         ...prev,
       ]);
-    }, 600);
+      return;
+    }
+
+    // 2. Check if amount exceeds the live contract's spend cap
+    if (numAmount > spendCapXlm) {
+      const escrowId = Math.floor(Math.random() * 800) + 10;
+      const result = {
+        status: 'Escrowed' as const,
+        reason: `High Value Transfer ($${numAmount}): Exceeds the ${spendCapXlm} XLM spend cap, so the contract diverts it to escrow (simulated id #${escrowId}) for admin release or a timelocked refund.`,
+        code: 6,
+        txHash: '2d83231685f03b17e1a001e6c82c38453459b4f67b416ef60f9be73133026f0e',
+        amount,
+        token,
+        escrowId,
+      };
+      setVerdict(result);
+      setTransactions((prev) => [
+        {
+          id: `tx-${Date.now()}`,
+          sender: userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 4),
+          recipient: recipient.substring(0, 8) + '...' + recipient.substring(recipient.length - 4),
+          token,
+          amount: numAmount.toLocaleString(),
+          status: 'Escrowed',
+          reason: `Exceeds spend cap; held in Escrow #${escrowId}`,
+          timestamp: 'Just now',
+          txHash: result.txHash,
+        },
+        ...prev,
+      ]);
+      return;
+    }
+
+    // 3. Approved
+    const result = {
+      status: 'Approved' as const,
+      reason: 'Payment Approved: Transaction satisfied all active compliance rules and spend limits. Direct SEP-41 SAC token transfer executed.',
+      code: 0,
+      txHash: 'c762b42f818387aa584ea33d3da006f22671071ed6e182068994ea6597395e6c',
+      amount,
+      token,
+    };
+    setVerdict(result);
+    setTransactions((prev) => [
+      {
+        id: `tx-${Date.now()}`,
+        sender: userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 4),
+        recipient: recipient.substring(0, 8) + '...' + recipient.substring(recipient.length - 4),
+        token,
+        amount: numAmount.toLocaleString(),
+        status: 'Approved',
+        reason: 'Direct settlement (Within spend cap & compliant recipient)',
+        timestamp: 'Just now',
+        txHash: result.txHash,
+      },
+      ...prev,
+    ]);
   };
 
   return (
@@ -539,16 +555,24 @@ export default function Dashboard() {
                   </button>
                 </div>
 
+                {/* Denylist warning from live on-chain state */}
+                {denylistWarning && (
+                  <div role="alert" className="flex items-start space-x-2 px-3.5 py-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300">
+                    <AlertOctagon className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-rose-400" />
+                    <span>{denylistWarning}</span>
+                  </div>
+                )}
+
                 {/* Submit Action */}
                 <button
                   onClick={handleEvaluateAndPay}
-                  disabled={isProcessing}
+                  disabled={isProcessing || denylistChecking}
                   className="w-full mt-4 py-3.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white flex items-center justify-center space-x-2 transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.99] disabled:opacity-50"
                 >
-                  {isProcessing ? (
+                  {isProcessing || denylistChecking ? (
                     <>
                       <RefreshCw className="h-4 w-4 animate-spin" />
-                      <span>Evaluating on Soroban...</span>
+                      <span>{denylistChecking ? 'Checking denylist on-chain…' : 'Evaluating on Soroban...'}</span>
                     </>
                   ) : (
                     <>
