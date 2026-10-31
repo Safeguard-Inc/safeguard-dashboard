@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchLiveConfig } from '@/lib/contractConfig';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
@@ -48,6 +49,17 @@ export default function Dashboard() {
   const [token, setToken] = useState('XLM');
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Live policy config fetched from Soroban RPC on mount
+  const [spendCapXlm, setSpendCapXlm] = useState<number>(100);
+  const [configLoading, setConfigLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLiveConfig().then((cfg) => {
+      setSpendCapXlm(cfg.spendCapXlm);
+      setConfigLoading(false);
+    });
+  }, []);
 
   // Outcome state
   const [verdict, setVerdict] = useState<{
@@ -203,12 +215,12 @@ export default function Dashboard() {
         return;
       }
 
-      // 2. Check if amount exceeds the live contract's 100 XLM spend cap
-      if (numAmount > 100) {
+      // 2. Check if amount exceeds the live contract's spend cap
+      if (numAmount > spendCapXlm) {
         const escrowId = Math.floor(Math.random() * 800) + 10;
         const result = {
           status: 'Escrowed' as const,
-          reason: `High Value Transfer ($${numAmount}): Exceeds the 100 XLM spend cap, so the contract diverts it to escrow (simulated id #${escrowId}) for admin release or a timelocked refund.`,
+          reason: `High Value Transfer ($${numAmount}): Exceeds the ${spendCapXlm} XLM spend cap, so the contract diverts it to escrow (simulated id #${escrowId}) for admin release or a timelocked refund.`,
           code: 6,
           txHash: '2d83231685f03b17e1a001e6c82c38453459b4f67b416ef60f9be73133026f0e',
           amount,
@@ -348,7 +360,11 @@ export default function Dashboard() {
           </div>
           <div className="p-4 rounded-2xl bg-slate-900/40 border border-indigo-950/50 backdrop-blur-sm">
             <p className="text-xs text-slate-400 font-medium">Instantaneous Spend Cap</p>
-            <p className="text-2xl font-bold text-white mt-1">100 <span className="text-xs font-normal text-indigo-300">XLM/tx</span></p>
+            {configLoading ? (
+              <p className="text-2xl font-bold text-white mt-1 animate-pulse">— <span className="text-xs font-normal text-indigo-300">loading…</span></p>
+            ) : (
+              <p className="text-2xl font-bold text-white mt-1">{spendCapXlm} <span className="text-xs font-normal text-indigo-300">XLM/tx</span></p>
+            )}
           </div>
           <div className="p-4 rounded-2xl bg-slate-900/40 border border-indigo-950/50 backdrop-blur-sm">
             <p className="text-xs text-slate-400 font-medium">On-Chain Policy Rules</p>
@@ -673,9 +689,11 @@ export default function Dashboard() {
                   </div>
                   <h3 className="font-bold text-white text-sm mb-1">Instant Spend Cap</h3>
                   <p className="text-xs text-slate-400 mb-4">
-                    Any payment above 100 XLM is diverted into on-chain escrow (live contract config).
+                    Any payment above {configLoading ? '…' : spendCapXlm} XLM is diverted into on-chain escrow (live contract config).
                   </p>
-                  <div className="text-xs font-mono text-indigo-300">Threshold: 1000000000 stroops (100 XLM)</div>
+                  <div className="text-xs font-mono text-indigo-300">
+                    Threshold: {configLoading ? '…' : (spendCapXlm * 10_000_000).toLocaleString()} stroops ({configLoading ? '…' : spendCapXlm} XLM)
+                  </div>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-slate-950/60 border border-indigo-900/40">
