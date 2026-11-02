@@ -697,6 +697,31 @@ export default function Dashboard() {
                   </button>
                 </div>
 
+                {/* Spend Cap Utilization Meter */}
+                {Number(amount) > 0 && (
+                  <div className="rounded-xl border border-indigo-950/70 bg-slate-950/40 p-3 text-xs">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-slate-400 font-medium">Policy Cap Utilization:</span>
+                      <span className={`font-mono font-semibold ${Number(amount) > spendCapXlm ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        {Number(amount)} / {spendCapXlm} {token} ({Math.min(100, Math.round((Number(amount) / spendCapXlm) * 100))}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          Number(amount) > spendCapXlm ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${Math.min(100, (Number(amount) / spendCapXlm) * 100)}%` }}
+                      />
+                    </div>
+                    {Number(amount) > spendCapXlm && (
+                      <p className="mt-1.5 text-[11px] text-amber-300/90 flex items-center gap-1">
+                        <span>⚠</span> Amount exceeds instant spend cap. Payment will automatically route to Escrow.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Denylist warning from live on-chain state */}
                 {denylistWarning && (
                   <div role="alert" className="flex items-start space-x-2 px-3.5 py-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300">
