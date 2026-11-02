@@ -1048,67 +1048,90 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-indigo-950/40">
-                  {transactions
-                  .filter((tx) => {
-                    const matchQuery =
-                      tx.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      tx.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      tx.txHash.toLowerCase().includes(searchQuery.toLowerCase());
-                    const matchStatus = statusFilter === 'ALL' || tx.status === statusFilter;
-                    return matchQuery && matchStatus;
-                  })
-                  .map((tx) => (
-                    <tr key={tx.id} className="hover:bg-slate-800/20 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
-                            tx.status === 'Approved'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : tx.status === 'Escrowed'
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                              : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                          }`}
-                        >
-                          {tx.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 font-bold text-white">
-                        {tx.amount} {tx.token}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono text-slate-300">{tx.sender}</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-300">{tx.recipient}</td>
-                      <td className="py-3.5 px-4 text-slate-300 max-w-xs truncate">{tx.reason}</td>
-                      <td className="py-3.5 px-4 text-slate-400">{tx.timestamp}</td>
-                      <td className="py-3.5 px-4 font-mono text-indigo-400">
-                        {tx.txHash ? (
-                        <div className="flex items-center space-x-1.5">
-                          <span className="truncate block max-w-[80px]" title={tx.txHash}>{tx.txHash}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(tx.txHash)}
-                            aria-label="Copy transaction hash"
-                            className="text-slate-500 hover:text-white transition-colors"
-                            title="Copy transaction hash"
+                  {(() => {
+                    const filtered = transactions.filter((tx) => {
+                      const matchQuery =
+                        tx.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        tx.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        tx.txHash.toLowerCase().includes(searchQuery.toLowerCase());
+                      const matchStatus = statusFilter === 'ALL' || tx.status === statusFilter;
+                      return matchQuery && matchStatus;
+                    });
+
+                    if (filtered.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-slate-500">
+                            <div className="flex flex-col items-center justify-center space-y-2">
+                              <Activity className="h-8 w-8 text-slate-600 mb-1" />
+                              <p className="text-sm font-medium text-slate-400">No telemetry events match your active filters</p>
+                              <p className="text-xs text-slate-500">Try adjusting your search query or status filter</p>
+                              <button
+                                type="button"
+                                onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); }}
+                                className="mt-2 px-3 py-1 text-xs rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/30 transition-all"
+                              >
+                                Reset Filters
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return filtered.map((tx) => (
+                      <tr key={tx.id} className="hover:bg-slate-800/20 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <span
+                            className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                              tx.status === 'Approved'
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                : tx.status === 'Escrowed'
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                            }`}
                           >
-                            <Copy className="h-3 w-3" />
-                          </button>
-                          <a
-                            href={`https://stellar.expert/explorer/testnet/tx/${tx.txHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="View on Stellar Expert"
-                            className="text-slate-500 hover:text-indigo-400 transition-colors"
-                            title="View on Stellar Expert"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      ) : (
-                        <span className="text-slate-600">—</span>
-                      )}
-                      </td>
-                    </tr>
-                  ))}
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-white">
+                          {tx.amount} {tx.token}
+                        </td>
+                        <td className="py-3.5 px-4 font-mono text-slate-300">{tx.sender}</td>
+                        <td className="py-3.5 px-4 font-mono text-slate-300">{tx.recipient}</td>
+                        <td className="py-3.5 px-4 text-slate-300 max-w-xs truncate">{tx.reason}</td>
+                        <td className="py-3.5 px-4 text-slate-400">{tx.timestamp}</td>
+                        <td className="py-3.5 px-4 font-mono text-indigo-400">
+                          {tx.txHash ? (
+                            <div className="flex items-center space-x-1.5">
+                              <span className="truncate block max-w-[80px]" title={tx.txHash}>{tx.txHash}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopy(tx.txHash)}
+                                aria-label="Copy transaction hash"
+                                className="text-slate-500 hover:text-white transition-colors"
+                                title="Copy transaction hash"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                              <a
+                                href={`https://stellar.expert/explorer/testnet/tx/${tx.txHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="View on Stellar Expert"
+                                className="text-slate-500 hover:text-indigo-400 transition-colors"
+                                title="View on Stellar Expert"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          ) : (
+                            <span className="text-slate-600">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>
