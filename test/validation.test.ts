@@ -7,6 +7,7 @@ import {
   isValidStellarRecipient,
   classifyAddressType,
   validatePaymentAmount,
+  validatePaymentMemo,
 } from '../src/lib/validation.ts';
 
 describe('Safeguard Dashboard Validation Tests', () => {
@@ -67,5 +68,30 @@ describe('Safeguard Dashboard Validation Tests', () => {
     const notANumber = validatePaymentAmount('foo');
     assert.equal(notANumber.valid, false);
   });
-});
 
+  test('validatePaymentMemo correctly enforces Stellar memo limits', () => {
+    // None type
+    assert.equal(validatePaymentMemo('', 'none').valid, true);
+    assert.equal(validatePaymentMemo('some memo', 'none').valid, true);
+
+    // Text memo (28 bytes limit)
+    assert.equal(validatePaymentMemo('Invoice #1042', 'text').valid, true);
+    assert.equal(validatePaymentMemo('1234567890123456789012345678', 'text').valid, true); // 28 chars
+    const tooLongText = validatePaymentMemo('12345678901234567890123456789', 'text'); // 29 chars
+    assert.equal(tooLongText.valid, false);
+    assert.ok(tooLongText.error?.includes('28-byte limit'));
+
+    // ID memo (unsigned 64-bit integer)
+    assert.equal(validatePaymentMemo('123456789', 'id').valid, true);
+    assert.equal(validatePaymentMemo('0', 'id').valid, true);
+    assert.equal(validatePaymentMemo('18446744073709551615', 'id').valid, true); // max uint64
+    assert.equal(validatePaymentMemo('-1', 'id').valid, false);
+    assert.equal(validatePaymentMemo('abc', 'id').valid, false);
+
+    // Hash memo (32 bytes = 64 hex characters)
+    const validHash = 'a'.repeat(64);
+    assert.equal(validatePaymentMemo(validHash, 'hash').valid, true);
+    assert.equal(validatePaymentMemo('abcd', 'hash').valid, false);
+    assert.equal(validatePaymentMemo('z'.repeat(64), 'hash').valid, false); // non-hex
+  });
+});
