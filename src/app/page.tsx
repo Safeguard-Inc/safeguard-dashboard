@@ -570,7 +570,7 @@ export default function Dashboard() {
                     <span className="truncate flex-1">{userAddress}</span>
                     <button
                       onClick={() => handleCopy(userAddress)}
-                      className="text-slate-400 hover:text-white transition-colors"
+                      aria-label="Copy sender address" className="text-slate-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded p-0.5"
                     >
                       {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                     </button>
@@ -580,13 +580,13 @@ export default function Dashboard() {
                 {/* Recipient Address */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                    <label htmlFor="recipient-address" className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
                       Recipient Address
                     </label>
                     <div className="flex items-center space-x-2 text-[11px]">
                       <button
                         type="button"
-                        onClick={() => setRecipient(PRESET_ACCOUNTS.COMPLIANT)}
+                        onClick={() => setRecipient(PRESET_ACCOUNTS.COMPLIANT)} aria-label="Select compliant merchant preset address"
                         className={`px-2 py-0.5 rounded-md transition-all ${
                           recipient === PRESET_ACCOUNTS.COMPLIANT
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
@@ -597,7 +597,7 @@ export default function Dashboard() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setRecipient(PRESET_ACCOUNTS.BLOCKED)}
+                        onClick={() => setRecipient(PRESET_ACCOUNTS.BLOCKED)} aria-label="Select denylisted OFAC preset address"
                         className={`px-2 py-0.5 rounded-md transition-all ${
                           recipient === PRESET_ACCOUNTS.BLOCKED
                             ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
@@ -610,6 +610,8 @@ export default function Dashboard() {
                   </div>
                   <input
                     type="text"
+                    id="recipient-address"
+                    aria-label="Recipient Stellar Address"
                     value={recipient}
                     onChange={(e) => setRecipient(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-slate-950/70 border border-indigo-950/80 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-indigo-500 transition-colors"
@@ -644,6 +646,7 @@ export default function Dashboard() {
                       Asset
                     </label>
                     <select
+                      aria-label="Asset selection"
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-slate-950/70 border border-indigo-950/80 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -660,6 +663,7 @@ export default function Dashboard() {
                     </label>
                     <input
                       type="number"
+                      aria-label="Payment amount in selected asset"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-slate-950/70 border border-indigo-950/80 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
@@ -672,19 +676,19 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2 pt-1">
                   <span className="text-xs text-slate-400">Quick Test:</span>
                   <button
-                    onClick={() => setAmount('25')}
+                    onClick={() => setAmount('25')} aria-label="Preset $25 payment (within spend cap)"
                     className="px-2.5 py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-colors"
                   >
                     $25 (Pass)
                   </button>
                   <button
-                    onClick={() => setAmount('500')}
+                    onClick={() => setAmount('500')} aria-label="Preset $500 payment (within spend cap)"
                     className="px-2.5 py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-colors"
                   >
                     $500 (Pass)
                   </button>
                   <button
-                    onClick={() => setAmount('2500')}
+                    onClick={() => setAmount('2500')} aria-label="Preset $2,500 payment (exceeds spend cap)"
                     className="px-2.5 py-1 text-xs rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors"
                   >
                     $2,500 (Escrow Cap Trigger)
@@ -921,7 +925,7 @@ export default function Dashboard() {
                 {(['ALL', 'Approved', 'Escrowed', 'Blocked'] as const).map((st) => (
                   <button
                     key={st}
-                    onClick={() => setStatusFilter(st)}
+                    onClick={() => setStatusFilter(st)} aria-pressed={statusFilter === st} aria-label={`Filter telemetry by ${st} status`}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                       statusFilter === st
                         ? 'bg-indigo-600 text-white'
