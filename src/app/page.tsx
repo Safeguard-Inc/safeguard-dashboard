@@ -655,7 +655,7 @@ export default function Dashboard() {
                     >
                       <option value="USDC">USDC (SAC)</option>
                       <option value="EURC">EURC (SAC)</option>
-                      <option value="XLM">XLM (Native)</option>
+                      <option value="XLM">XLM (Native)</option>`r`n                      <option value="PYUSD">PYUSD (SAC)</option>
                     </select>
                   </div>
 
