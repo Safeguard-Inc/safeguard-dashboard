@@ -9,7 +9,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Lock, RefreshCw, CheckCircle2, RotateCcw, Clock, Loader2, ExternalLink } from 'lucide-react';
+import { Lock, RefreshCw, CheckCircle2, RotateCcw, Clock, Loader2, ExternalLink, Download } from 'lucide-react';
+import { formatEscrowsAsCsv, formatEscrowsAsJson } from '../lib/escrowExport';
 import { executeLiveEscrowAction } from '../lib/stellarTx';
 
 interface EscrowRecord {
@@ -159,6 +160,28 @@ export default function EscrowPanel({ walletConnected, userAddress }: EscrowPane
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleExportCsv = () => {
+    const csv = formatEscrowsAsCsv(escrows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `safeguard-escrows-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportJson = () => {
+    const json = formatEscrowsAsJson(escrows);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `safeguard-escrows-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const pendingEscrows = escrows.filter((e) => !actioned.has(e.id));
