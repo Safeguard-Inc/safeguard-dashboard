@@ -6,7 +6,7 @@ import { checkIsDenylisted } from '@/lib/denylistCheck';
 import { fetchTransactions, FALLBACK_TRANSACTIONS } from '@/lib/api';
 import type { TxItem } from '@/types/tx';
 import EscrowPanel from '@/components/EscrowPanel';
-import { executeLivePayment, XLM_SAC_ID } from '@/lib/stellarTx';
+import { executeLivePayment, XLM_SAC_ID, fetchLiveAccountBalance } from '@/lib/stellarTx';
 import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
@@ -27,7 +27,9 @@ import {
   Copy,
   Check,
   Send,
-  Loader2
+  Loader2,
+  Download,
+  Search
 } from 'lucide-react';
 
 const PRESET_ACCOUNTS = {
@@ -56,6 +58,15 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<TxItem[]>(FALLBACK_TRANSACTIONS);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [secondsAgo, setSecondsAgo] = useState<number>(0);
+  const [userBalance, setUserBalance] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'Approved' | 'Escrowed' | 'Blocked'>('ALL');
+
+  useEffect(() => {
+    if (userAddress) {
+      fetchLiveAccountBalance(userAddress).then(setUserBalance);
+    }
+  }, [userAddress]);
   const [isSubmittingOnChain, setIsSubmittingOnChain] = useState(false);
   const [onChainStatus, setOnChainStatus] = useState<{
     status: 'SUCCESS' | 'FAILED' | 'REJECTED';
@@ -806,6 +817,35 @@ export default function Dashboard() {
               </div>
             </div>
 
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by address or hash..."
+                  className="w-full pl-8 pr-3 py-1.5 bg-slate-950/70 border border-indigo-950/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                />
+              </div>
+              <div className="flex items-center space-x-2 w-full sm:w-auto">
+                <span className="text-xs text-slate-400">Filter:</span>
+                {(['ALL', 'Approved', 'Escrowed', 'Blocked'] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setStatusFilter(st)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      statusFilter === st
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-800/60 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
@@ -820,7 +860,16 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-indigo-950/40">
-                  {transactions.map((tx) => (
+                  {transactions
+                  .filter((tx) => {
+                    const matchQuery =
+                      tx.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      tx.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      tx.txHash.toLowerCase().includes(searchQuery.toLowerCase());
+                    const matchStatus = statusFilter === 'ALL' || tx.status === statusFilter;
+                    return matchQuery && matchStatus;
+                  })
+                  .map((tx) => (
                     <tr key={tx.id} className="hover:bg-slate-800/20 transition-colors">
                       <td className="py-3.5 px-4">
                         <span

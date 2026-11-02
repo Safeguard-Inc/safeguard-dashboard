@@ -210,3 +210,24 @@ export async function executeLiveEscrowAction(params: {
   }
 }
 
+
+
+/**
+ * Fetch live native XLM balance for a Stellar address via Horizon testnet.
+ */
+export async function fetchLiveAccountBalance(address: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${address}`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const native = data.balances?.find((b: any) => b.asset_type === 'native');
+    return native ? parseFloat(native.balance).toFixed(2) : null;
+  } catch {
+    return null;
+  }
+}
