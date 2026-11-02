@@ -9,6 +9,7 @@ import EscrowPanel from '@/components/EscrowPanel';
 import { executeLivePayment, XLM_SAC_ID, fetchLiveAccountBalance } from '@/lib/stellarTx';
 import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
+import ThemeToggle from '@/components/ThemeToggle';
 import { classifyAddressType } from '@/lib/validation';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
@@ -417,6 +418,7 @@ export default function Dashboard() {
         <div className="flex items-center space-x-3">
           <NetworkSwitcher />
           <NetworkStatusBadge />
+          <ThemeToggle />
 
           {freighterNotInstalled && (
             <a
