@@ -75,21 +75,33 @@ function CountdownClock({ expiresAt }: { expiresAt: number }) {
     return () => clearInterval(tick);
   }, [expiresAt]);
 
-  if (remaining <= 0) return <span className="text-rose-400 font-mono text-xs">Expired</span>;
+  if (remaining <= 0) {
+    return (
+      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono text-[11px] border border-rose-500/30">
+        <Clock className="h-3 w-3" />
+        <span>Timelock Expired</span>
+      </span>
+    );
+  }
 
   const h = Math.floor(remaining / 3600);
   const m = Math.floor((remaining % 3600) / 60);
   const s = remaining % 60;
 
   const color = remaining < 3600 ? 'text-rose-400' : remaining < 7200 ? 'text-amber-400' : 'text-emerald-400';
+  const badgeBg = remaining < 3600 ? 'bg-rose-500/10 border-rose-500/30' : remaining < 7200 ? 'bg-amber-500/10 border-amber-500/30' : 'bg-emerald-500/10 border-emerald-500/30';
 
   return (
-    <span className={`font-mono text-xs ${color}`}>
-      {String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
-    </span>
+    <div className="flex flex-col space-y-1">
+      <div className={`inline-flex items-center space-x-1.5 px-2 py-0.5 rounded border text-[11px] font-mono ${badgeBg} ${color}`}>
+        <Clock className="h-3 w-3 animate-pulse" />
+        <span>
+          {String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
+        </span>
+      </div>
+    </div>
   );
 }
-
 interface EscrowPanelProps {
   walletConnected: boolean;
   userAddress?: string;
