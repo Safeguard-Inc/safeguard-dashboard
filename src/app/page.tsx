@@ -9,6 +9,7 @@ import EscrowPanel from '@/components/EscrowPanel';
 import { executeLivePayment, XLM_SAC_ID, fetchLiveAccountBalance } from '@/lib/stellarTx';
 import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
+import { classifyAddressType } from '@/lib/validation';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
@@ -232,6 +233,19 @@ export default function Dashboard() {
     setDenylistWarning(null);
 
     const numAmount = parseFloat(amount) || 0;
+    // Client-side StrKey format pre-check
+    if (classifyAddressType(recipient) === 'invalid') {
+      setIsProcessing(false);
+      setVerdict({
+        status: 'Blocked' as const,
+        reason: 'Client Validation Error: Recipient address is not a valid Stellar ed25519 or Soroban contract address format.',
+        code: 1,
+        txHash: 'N/A (Pre-flight rejected)',
+        amount,
+        token,
+      });
+      return;
+    }
 
     // 0. Live denylist check via Soroban RPC before any simulation
     setDenylistChecking(true);
@@ -552,6 +566,27 @@ export default function Dashboard() {
                     onChange={(e) => setRecipient(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-slate-950/70 border border-indigo-950/80 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-indigo-500 transition-colors"
                   />
+                  {recipient && (
+                    <div className="mt-1.5 flex items-center space-x-1.5 text-[11px]">
+                      {classifyAddressType(recipient) === 'account' ? (
+                        <span className="text-emerald-400 flex items-center gap-1 font-mono">
+                          <Check className="h-3 w-3" /> Valid Stellar Ed25519 Account (G...)
+                        </span>
+                      ) : classifyAddressType(recipient) === 'contract' ? (
+                        <span className="text-indigo-400 flex items-center gap-1 font-mono">
+                          <Check className="h-3 w-3" /> Valid Soroban Contract Address (C...)
+                        </span>
+                      ) : classifyAddressType(recipient) === 'muxed' ? (
+                        <span className="text-cyan-400 flex items-center gap-1 font-mono">
+                          <Check className="h-3 w-3" /> Valid Multiplexed Account (M...)
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" /> Invalid StrKey format: 56-char base32 expected (G... or C...)
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Token and Amount */}
