@@ -10,7 +10,7 @@ import { executeLivePayment, XLM_SAC_ID, fetchLiveAccountBalance } from '@/lib/s
 import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import ThemeToggle from '@/components/ThemeToggle';
-import { classifyAddressType } from '@/lib/validation';
+import { classifyAddressType, validatePaymentMemo, type MemoType } from '@/lib/validation';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
@@ -50,6 +50,8 @@ export default function Dashboard() {
   const [token, setToken] = useState('XLM');
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [memoType, setMemoType] = useState<MemoType>('none');
+  const [memo, setMemo] = useState<string>('');
 
   // Live policy config fetched from Soroban RPC on mount
   const [spendCapXlm, setSpendCapXlm] = useState<number>(100);
@@ -655,7 +657,8 @@ export default function Dashboard() {
                     >
                       <option value="USDC">USDC (SAC)</option>
                       <option value="EURC">EURC (SAC)</option>
-                      <option value="XLM">XLM (Native)</option>`r`n                      <option value="PYUSD">PYUSD (SAC)</option>
+                      <option value="XLM">XLM (Native)</option>
+                      <option value="PYUSD">PYUSD (SAC)</option>
                     </select>
                   </div>
 
@@ -695,6 +698,52 @@ export default function Dashboard() {
                   >
                     $2,500 (Escrow Cap Trigger)
                   </button>
+                </div>
+
+                {/* Stellar Payment Memo */}
+                <div className="grid grid-cols-4 gap-3 pt-1">
+                  <div className="col-span-1">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Memo Type
+                    </label>
+                    <select
+                      aria-label="Stellar memo type"
+                      value={memoType}
+                      onChange={(e) => setMemoType(e.target.value as MemoType)}
+                      className="w-full px-3 py-2 bg-slate-950/70 border border-indigo-950/80 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="none">None</option>
+                      <option value="text">Text (28B)</option>
+                      <option value="id">ID (uint64)</option>
+                      <option value="hash">Hash (32B)</option>
+                    </select>
+                  </div>
+                  <div className="col-span-3">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Memo Content
+                    </label>
+                    <input
+                      type="text"
+                      disabled={memoType === 'none'}
+                      aria-label="Payment memo string"
+                      value={memo}
+                      onChange={(e) => setMemo(e.target.value)}
+                      className={`w-full px-3.5 py-2 bg-slate-950/70 border rounded-xl text-xs text-white font-mono focus:outline-none ${
+                        memoType === 'none'
+                          ? 'opacity-50 cursor-not-allowed border-indigo-950/40'
+                          : 'border-indigo-950/80 focus:border-indigo-500'
+                      }`}
+                      placeholder={
+                        memoType === 'none'
+                          ? 'No memo attached'
+                          : memoType === 'text'
+                          ? 'Invoice #1042 / compliance tag'
+                          : memoType === 'id'
+                          ? '123456789'
+                          : '32-byte hex hash'
+                      }
+                    />
+                  </div>
                 </div>
 
                 {/* Spend Cap Utilization Meter */}

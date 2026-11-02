@@ -92,3 +92,51 @@ export function validatePaymentAmount(amountStr: string): AmountValidationResult
 
   return { valid: true, amount: num };
 }
+
+export type MemoType = 'text' | 'id' | 'hash' | 'none';
+
+export interface MemoValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
+/**
+ * Validates a payment memo string according to Stellar standard memo restrictions:
+ * - Text: max 28 UTF-8 bytes
+ * - ID: unsigned 64-bit integer
+ * - Hash: 32-byte hex string (64 hex characters)
+ */
+export function validatePaymentMemo(memo: string, type: MemoType): MemoValidationResult {
+  if (!memo || !memo.trim() || type === 'none') {
+    return { valid: true };
+  }
+  const trimmed = memo.trim();
+  if (type === 'text') {
+    const byteLength = new TextEncoder().encode(trimmed).length;
+    if (byteLength > 28) {
+      return { valid: false, error: "Text memo exceeds 28-byte limit (" + byteLength + " bytes)" };
+    }
+    return { valid: true };
+  }
+  if (type === 'id') {
+    if (!/^\d+$/.test(trimmed)) {
+      return { valid: false, error: 'ID memo must be an unsigned 64-bit integer' };
+    }
+    try {
+      const val = BigInt(trimmed);
+      if (val < 0n || val > 18446744073709551615n) {
+        return { valid: false, error: 'ID memo out of uint64 range' };
+      }
+      return { valid: true };
+    } catch {
+      return { valid: false, error: 'Invalid ID memo' };
+    }
+  }
+  if (type === 'hash') {
+    if (!/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+      return { valid: false, error: 'Hash memo must be a 32-byte hexadecimal string (64 hex characters)' };
+    }
+    return { valid: true };
+  }
+  return { valid: true };
+}
