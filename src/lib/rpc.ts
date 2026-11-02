@@ -1,12 +1,12 @@
 /**
  * Configured Soroban RPC client for Stellar Testnet.
  *
- * Exports a singleton SorobanRpc.Server instance pointed at the public
+ * Exports a singleton rpc.Server instance pointed at the public
  * Soroban testnet RPC endpoint, plus the canonical contract IDs for the
  * Safeguard protocol deployment.
  */
 
-import { SorobanRpc } from '@stellar/stellar-sdk';
+import { rpc } from '@stellar/stellar-sdk';
 
 // Public Soroban testnet RPC endpoint (Stellar Foundation)
 const SOROBAN_TESTNET_RPC_URL = 'https://soroban-testnet.stellar.org';
@@ -15,7 +15,7 @@ const SOROBAN_TESTNET_RPC_URL = 'https://soroban-testnet.stellar.org';
  * Singleton Soroban RPC server instance.
  * All contract simulation and state reads should use this client.
  */
-export const sorobanServer = new SorobanRpc.Server(SOROBAN_TESTNET_RPC_URL, {
+export const sorobanServer = new rpc.Server(SOROBAN_TESTNET_RPC_URL, {
   allowHttp: false,
 });
 

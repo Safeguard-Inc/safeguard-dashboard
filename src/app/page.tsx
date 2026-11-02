@@ -49,6 +49,11 @@ export default function Dashboard() {
   const [denylistWarning, setDenylistWarning] = useState<string | null>(null);
   const [denylistChecking, setDenylistChecking] = useState(false);
 
+  // Transactions list — seeded with fallback data, replaced by live API on mount
+  const [transactions, setTransactions] = useState<TxItem[]>(FALLBACK_TRANSACTIONS);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [secondsAgo, setSecondsAgo] = useState<number>(0);
+
   useEffect(() => {
     fetchLiveConfig().then((cfg) => {
       setSpendCapXlm(cfg.spendCapXlm);
@@ -95,10 +100,6 @@ export default function Dashboard() {
     escrowId?: number;
   } | null>(null);
 
-  // Transactions list — seeded with fallback data, replaced by live API on mount
-  const [transactions, setTransactions] = useState<TxItem[]>(FALLBACK_TRANSACTIONS);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [secondsAgo, setSecondsAgo] = useState<number>(0);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);

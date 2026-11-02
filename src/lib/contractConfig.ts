@@ -24,7 +24,7 @@ const DEFAULT_CONFIG: PolicyConfig = {
   spendCapStroops: BigInt(1_000_000_000),
 };
 
-const STROOPS_PER_XLM = 10_000_000n;
+const STROOPS_PER_XLM = BigInt(10_000_000);
 
 /**
  * Fetches the live policy configuration from the SafeguardPayments contract.
