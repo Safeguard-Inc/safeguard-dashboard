@@ -6,6 +6,7 @@ import { checkIsDenylisted } from '@/lib/denylistCheck';
 import { fetchTransactions, FALLBACK_TRANSACTIONS } from '@/lib/api';
 import type { TxItem } from '@/types/tx';
 import EscrowPanel from '@/components/EscrowPanel';
+import { executeLivePayment, XLM_SAC_ID } from '@/lib/stellarTx';
 import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
@@ -24,7 +25,9 @@ import {
   Building,
   AlertOctagon,
   Copy,
-  Check
+  Check,
+  Send,
+  Loader2
 } from 'lucide-react';
 
 const PRESET_ACCOUNTS = {
@@ -53,6 +56,46 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<TxItem[]>(FALLBACK_TRANSACTIONS);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [secondsAgo, setSecondsAgo] = useState<number>(0);
+  const [isSubmittingOnChain, setIsSubmittingOnChain] = useState(false);
+  const [onChainStatus, setOnChainStatus] = useState<{
+    status: 'SUCCESS' | 'FAILED' | 'REJECTED';
+    txHash?: string;
+    reason?: string;
+  } | null>(null);
+
+  const handleSubmitOnChain = async () => {
+    if (!walletConnected || !userAddress) return;
+    setIsSubmittingOnChain(true);
+    setOnChainStatus(null);
+    try {
+      const res = await executeLivePayment({
+        sender: userAddress,
+        recipient,
+        tokenContractId: XLM_SAC_ID,
+        amountXlm: amount,
+      });
+      setOnChainStatus(res);
+      if (res.success && res.txHash) {
+        setVerdict((prev) => (prev ? { ...prev, txHash: res.txHash! } : null));
+        setTransactions((prev) => [
+          {
+            id: `tx-live-${Date.now()}`,
+            sender: userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 4),
+            recipient: recipient.substring(0, 8) + '...' + recipient.substring(recipient.length - 4),
+            token,
+            amount: parseFloat(amount).toLocaleString(),
+            status: verdict?.status || 'Approved',
+            reason: 'Live On-Chain Transaction Submitted via Freighter',
+            timestamp: 'Just now',
+            txHash: res.txHash || '',
+          },
+          ...prev,
+        ]);
+      }
+    } finally {
+      setIsSubmittingOnChain(false);
+    }
+  };
 
   useEffect(() => {
     fetchLiveConfig().then((cfg) => {
@@ -810,7 +853,7 @@ export default function Dashboard() {
           </div>
         )}
         {activeTab === 'escrow' && (
-          <EscrowPanel walletConnected={walletConnected} />
+          <EscrowPanel walletConnected={walletConnected} userAddress={userAddress} />
         )}
       </main>
 
