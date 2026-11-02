@@ -1030,7 +1030,32 @@ export default function Dashboard() {
                       <td className="py-3.5 px-4 text-slate-300 max-w-xs truncate">{tx.reason}</td>
                       <td className="py-3.5 px-4 text-slate-400">{tx.timestamp}</td>
                       <td className="py-3.5 px-4 font-mono text-indigo-400">
-                        <span className="truncate block max-w-[100px]">{tx.txHash}</span>
+                        {tx.txHash ? (
+                        <div className="flex items-center space-x-1.5">
+                          <span className="truncate block max-w-[80px]" title={tx.txHash}>{tx.txHash}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(tx.txHash)}
+                            aria-label="Copy transaction hash"
+                            className="text-slate-500 hover:text-white transition-colors"
+                            title="Copy transaction hash"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </button>
+                          <a
+                            href={`https://stellar.expert/explorer/testnet/tx/${tx.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View on Stellar Expert"
+                            className="text-slate-500 hover:text-indigo-400 transition-colors"
+                            title="View on Stellar Expert"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      ) : (
+                        <span className="text-slate-600">—</span>
+                      )}
                       </td>
                     </tr>
                   ))}
