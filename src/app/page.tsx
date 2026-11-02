@@ -157,6 +157,38 @@ export default function Dashboard() {
   } | null>(null);
 
 
+  const handleExportJson = () => {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(transactions, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `safeguard-telemetry-${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleExportCsv = () => {
+    const headers = ['id', 'status', 'amount', 'token', 'sender', 'recipient', 'reason', 'timestamp', 'txHash'];
+    const rows = transactions.map((t) => [
+      t.id,
+      t.status,
+      t.amount,
+      t.token,
+      t.sender,
+      t.recipient,
+      `"${(t.reason || '').replace(/"/g, '""')}"`,
+      t.timestamp,
+      t.txHash,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', encodeURI(csvContent));
+    downloadAnchor.setAttribute('download', `safeguard-telemetry-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -880,6 +912,25 @@ export default function Dashboard() {
                     {st}
                   </button>
                 ))}
+                <div className="h-4 w-px bg-indigo-950/80 mx-1 hidden sm:block" />
+                <button
+                  type="button"
+                  onClick={handleExportCsv}
+                  title="Export telemetry as CSV"
+                  className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 hover:text-white border border-indigo-950/80 transition-colors"
+                >
+                  <Download className="h-3 w-3 text-indigo-400" />
+                  <span>CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportJson}
+                  title="Export telemetry as JSON"
+                  className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 hover:text-white border border-indigo-950/80 transition-colors"
+                >
+                  <Download className="h-3 w-3 text-indigo-400" />
+                  <span>JSON</span>
+                </button>
               </div>
             </div>
 
