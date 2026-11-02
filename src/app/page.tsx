@@ -8,6 +8,7 @@ import type { TxItem } from '@/types/tx';
 import EscrowPanel from '@/components/EscrowPanel';
 import { executeLivePayment, XLM_SAC_ID, fetchLiveAccountBalance } from '@/lib/stellarTx';
 import NetworkStatusBadge from '@/components/NetworkStatusBadge';
+import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
   ShieldCheck,
@@ -352,6 +353,7 @@ export default function Dashboard() {
 
         {/* Network & Wallet Controls */}
         <div className="flex items-center space-x-3">
+          <NetworkSwitcher />
           <NetworkStatusBadge />
 
           {freighterNotInstalled && (
