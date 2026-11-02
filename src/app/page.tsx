@@ -145,6 +145,22 @@ export default function Dashboard() {
     return () => clearInterval(tick);
   }, [lastUpdated]);
 
+
+  // Keyboard shortcut listener: Ctrl+Enter or Cmd+Enter triggers evaluation in checkout
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (activeTab === 'checkout' && !isProcessing && !denylistChecking) {
+          e.preventDefault();
+          handleEvaluateAndPay();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, isProcessing, denylistChecking, recipient, amount, token, spendCapXlm]);
+
   // Outcome state
   const [verdict, setVerdict] = useState<{
     status: 'Approved' | 'Escrowed' | 'Blocked';
@@ -697,6 +713,9 @@ export default function Dashboard() {
                   ) : (
                     <>
                       <span>Evaluate & Execute Payment</span>
+                      <kbd className="hidden sm:inline-block text-[10px] bg-indigo-900/60 px-1.5 py-0.5 rounded border border-indigo-500/30 font-mono text-indigo-300">
+                        Ctrl+↵
+                      </kbd>
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
