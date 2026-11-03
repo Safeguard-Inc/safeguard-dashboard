@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import { abbreviateAddress } from '../lib/formatters';
+
+export { abbreviateAddress };
 
 export interface TokenBalanceCardProps {
   symbol: string;
@@ -10,11 +13,6 @@ export interface TokenBalanceCardProps {
   network?: 'testnet' | 'mainnet';
   isSelected?: boolean;
   onSelect?: (symbol: string) => void;
-}
-
-export function abbreviateAddress(address: string, chars = 4): string {
-  if (!address || address.length <= chars * 2) return address;
-  return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
 
 export function TokenBalanceCard({
