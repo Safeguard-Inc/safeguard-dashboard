@@ -10,6 +10,14 @@ import { executeLivePayment, XLM_SAC_ID, fetchLiveAccountBalance } from '@/lib/s
 import NetworkStatusBadge from '@/components/NetworkStatusBadge';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import ThemeToggle from '@/components/ThemeToggle';
+import { ProtocolStatusBanner } from '@/components/ProtocolStatusBanner';
+import { GatewayTelemetrySnapshotCard } from '@/components/GatewayTelemetrySnapshotCard';
+import { EmergencyPauseStatusCard } from '@/components/EmergencyPauseStatusCard';
+import { LiquidityPoolRoutingCard } from '@/components/LiquidityPoolRoutingCard';
+import { MultiCurrencySettlementSummaryCard } from '@/components/MultiCurrencySettlementSummaryCard';
+import { EnterpriseDisbursementEngineCard } from '@/components/EnterpriseDisbursementEngineCard';
+import { BalanceSheetExportModal } from '@/components/BalanceSheetExportModal';
+import { CompliancePacketExportModal } from '@/components/CompliancePacketExportModal';
 import { classifyAddressType, validatePaymentMemo, type MemoType } from '@/lib/validation';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import {
@@ -42,7 +50,9 @@ const PRESET_ACCOUNTS = {
 };
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'checkout' | 'policies' | 'explorer' | 'escrow'>('checkout');
+  const [activeTab, setActiveTab] = useState<'checkout' | 'policies' | 'operations' | 'explorer' | 'escrow'>('checkout');
+  const [isBalanceSheetOpen, setIsBalanceSheetOpen] = useState(false);
+  const [isCompliancePacketOpen, setIsCompliancePacketOpen] = useState(false);
   const [walletConnected, setWalletConnected] = useState(false);
   const [isFreighter, setIsFreighter] = useState(false);
   const [userAddress, setUserAddress] = useState('GC5MCMHHMFV7GOQ7DVN7MOTMHGTMVIP3YFQAAVFZ6WKUE6SLGQBVODW4');
@@ -452,6 +462,7 @@ export default function Dashboard() {
           </button>
         </div>
       </header>
+      <ProtocolStatusBanner />
 
       {/* Interactive Policy Sandbox / Zero-Gas Simulator Mode Banner */}
       <div className="bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-amber-500/10 border-b border-amber-500/20 px-6 py-2.5 text-xs text-amber-200/90 flex flex-wrap items-center justify-between gap-2">
@@ -515,6 +526,17 @@ export default function Dashboard() {
           >
             <CreditCard className="h-4 w-4" />
             <span>Payment Simulator & Checkout</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('operations')}
+            className={`pb-3 font-medium flex items-center space-x-2 border-b-2 transition-all ${
+              activeTab === 'operations'
+                ? 'border-indigo-500 text-white'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span>Treasury & Operations</span>
           </button>
           <button
             onClick={() => setActiveTab('policies')}
@@ -968,6 +990,20 @@ export default function Dashboard() {
           </div>
         )}
 
+        {activeTab === 'operations' && (
+          <div className="space-y-6">
+            <GatewayTelemetrySnapshotCard />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <EmergencyPauseStatusCard />
+              <LiquidityPoolRoutingCard />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <EnterpriseDisbursementEngineCard />
+              <MultiCurrencySettlementSummaryCard />
+            </div>
+          </div>
+        )}
+
         {activeTab === 'explorer' && (
           <div className="bg-slate-900/50 border border-indigo-950/60 rounded-3xl p-6 backdrop-blur-md">
             <div className="flex items-center justify-between mb-6">
@@ -1021,6 +1057,22 @@ export default function Dashboard() {
                 >
                   <Download className="h-3 w-3 text-indigo-400" />
                   <span>CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsBalanceSheetOpen(true)}
+                  title="Export balance sheet"
+                  className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 hover:text-white border border-indigo-950/80 transition-colors"
+                >
+                  <span>📊 Balance Sheet</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsCompliancePacketOpen(true)}
+                  title="Export sealed compliance packet"
+                  className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 hover:text-white border border-indigo-950/80 transition-colors"
+                >
+                  <span>📜 Compliance Packet</span>
                 </button>
                 <button
                   type="button"
@@ -1141,6 +1193,15 @@ export default function Dashboard() {
           <EscrowPanel walletConnected={walletConnected} userAddress={userAddress} />
         )}
       </main>
+
+      <BalanceSheetExportModal
+        isOpen={isBalanceSheetOpen}
+        onClose={() => setIsBalanceSheetOpen(false)}
+      />
+      <CompliancePacketExportModal
+        isOpen={isCompliancePacketOpen}
+        onClose={() => setIsCompliancePacketOpen(false)}
+      />
 
       {/* Footer */}
       <footer className="border-t border-indigo-950/60 bg-slate-950/80 px-6 py-4 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
