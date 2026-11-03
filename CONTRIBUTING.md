@@ -1,13 +1,32 @@
 # Contributing to Safeguard Dashboard
 
-We welcome pull requests from community frontend and Web3 developers!
+Thank you for your interest in contributing to Safeguard Dashboard! We welcome contributions, bug fixes, accessibility passes, and UI enhancements.
 
-## Local Setup
+## Code of Conduct
+
+All contributors and maintainers are expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Development Workflow
+
+### Prerequisites
+* Node.js 20+ (Node 22 and 25 supported)
+* npm 10+
+* Freighter browser extension (recommended for testing live transactions)
+
+### Setup
 ```bash
 git clone https://github.com/Safeguard-Inc/safeguard-dashboard.git
 cd safeguard-dashboard
-npm install
+npm ci
+npm test
+npm run build
 npm run dev
 ```
 
-Before opening a PR, ensure `npm run build` succeeds cleanly.
+### Pull Request & Commit Guidelines
+* We adhere to Conventional Commits: `feat:`, `fix:`, `test:`, `docs:`, `ui:`.
+* Ensure TypeScript strict checking (`npx tsc --noEmit`) and unit tests (`npm test`) pass with zero errors.
+* Verify production build (`npm run build`) completes without regressions.
+
+## Security Vulnerabilities
+Please refer to [SECURITY.md](SECURITY.md) and report security findings to `security@safeguard.inc`.
