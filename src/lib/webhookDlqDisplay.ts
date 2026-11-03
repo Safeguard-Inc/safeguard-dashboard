@@ -26,7 +26,7 @@ export function formatRelativeFailureTime(failedAt: number, nowMs: number = Date
  */
 export function classifyErrorSeverity(error: string): { label: string; badgeClass: string } {
   const clean = (error || '').toLowerCase();
-  if (clean.includes('timeout') || clean.includes('econnrefused') || clean.includes('network')) {
+  if (clean.includes('timeout') || clean.includes('timed out') || clean.includes('econnrefused') || clean.includes('econnreset') || clean.includes('network')) {
     return {
       label: 'Network Lag / Timeout',
       badgeClass: 'bg-amber-500/10 text-amber-400 border border-amber-500/30',
