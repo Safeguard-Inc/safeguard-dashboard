@@ -62,13 +62,14 @@ export function parseBatchCsvText(csvText: string): { rows: BatchCsvRow[]; summa
     };
   }
 
-  // Detect header row
-  const firstLine = lines[0].toLowerCase();
-  const hasHeader =
-    firstLine.includes('recipient') ||
-    firstLine.includes('amount') ||
-    firstLine.includes('token') ||
-    firstLine.includes('sender');
+  // Parse header
+  const headerParts = lines[0].toLowerCase().split(',').map((p) => p.trim().replace(/^"|"$/g, ''));
+  const recipientIdx = headerParts.indexOf('recipient');
+  const amountIdx = headerParts.indexOf('amount');
+  const tokenIdx = headerParts.indexOf('token');
+  const memoIdx = headerParts.indexOf('memo');
+
+  const hasHeader = recipientIdx !== -1 && amountIdx !== -1;
   const startIdx = hasHeader ? 1 : 0;
 
   const rows: BatchCsvRow[] = [];
@@ -79,19 +80,18 @@ export function parseBatchCsvText(csvText: string): { rows: BatchCsvRow[]; summa
 
   for (let i = startIdx; i < lines.length; i++) {
     const parts = lines[i].split(',').map((p) => p.trim().replace(/^"|"$/g, ''));
-    // Support formats: [sender, recipient, token, amount, memo?] OR [recipient, amount, token, memo?]
     let recipient = '';
     let amount = '';
     let token = 'XLM';
     let memo: string | undefined = undefined;
 
-    if (parts.length >= 4 && (parts[0].startsWith('G') || parts[0].startsWith('C'))) {
-      // 4+ columns with sender prefix
-      recipient = parts[1];
-      token = parts[2];
-      amount = parts[3];
-      memo = parts[4];
+    if (hasHeader) {
+      recipient = parts[recipientIdx] || '';
+      amount = parts[amountIdx] || '';
+      token = tokenIdx !== -1 && parts[tokenIdx] ? parts[tokenIdx] : 'XLM';
+      memo = memoIdx !== -1 ? parts[memoIdx] : undefined;
     } else {
+      // Fallback: [recipient, amount, token, memo]
       recipient = parts[0] || '';
       amount = parts[1] || '';
       token = parts[2] || 'XLM';
