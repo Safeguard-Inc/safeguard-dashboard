@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateSep7PaymentUri } from '../src/lib/sep7.ts';
+import { generateSep7PaymentUri, getQrCodeImageUrl } from '../src/lib/sep7.ts';
 
 describe('Safeguard Dashboard SEP-0007 URI Tests', () => {
   const DESTINATION = 'GA6LW724VD6PVAG6U3Z3I34D7BOWPO6J7MIJATKGKEC6TYORN4SRCVLT';
@@ -46,5 +46,21 @@ describe('Safeguard Dashboard SEP-0007 URI Tests', () => {
     assert.throws(() => generateSep7PaymentUri({ destination: '' }), {
       message: 'Destination account is required for SEP-0007 URI',
     });
+  });
+
+  test('getQrCodeImageUrl encodes SEP-0007 URI and sets size parameters', () => {
+    const uri = generateSep7PaymentUri({ destination: DESTINATION, amount: '10' });
+    const qrUrl = getQrCodeImageUrl(uri, 300);
+
+    assert.ok(qrUrl.startsWith('https://api.qrserver.com/v1/create-qr-code/'));
+    assert.ok(qrUrl.includes('size=300x300'));
+    assert.ok(qrUrl.includes(encodeURIComponent(uri)));
+  });
+
+  test('getQrCodeImageUrl defaults to 240x240 size', () => {
+    const uri = generateSep7PaymentUri({ destination: DESTINATION });
+    const qrUrl = getQrCodeImageUrl(uri);
+
+    assert.ok(qrUrl.includes('size=240x240'));
   });
 });
