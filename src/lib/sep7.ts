@@ -46,3 +46,11 @@ export function generateSep7PaymentUri(params: Sep7PaymentUriParams): string {
 
   return `web+stellar:pay?${queryParams.toString()}`;
 }
+
+/**
+ * Returns a high-contrast QR code image URL for a given SEP-0007 URI.
+ */
+export function getQrCodeImageUrl(uri: string, size = 240): string {
+  const encoded = encodeURIComponent(uri);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&margin=10`;
+}
