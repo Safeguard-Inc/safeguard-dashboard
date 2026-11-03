@@ -61,3 +61,51 @@ export function getFeeBadgeStyle(isEscrow: boolean, tier: string = 'normal'): {
     label: 'Standard Transfer',
   };
 }
+
+
+export interface BatchSimulationItem {
+  id?: string;
+  sender: string;
+  recipient: string;
+  amountStroops: string | number | bigint;
+  decision: 'APPROVE' | 'FLAG' | 'BLOCK';
+  reason?: string;
+}
+
+export interface BatchSimulationSummary {
+  total: number;
+  approvedCount: number;
+  escrowedCount: number;
+  blockedCount: number;
+  approvalRatioPercent: number;
+  totalVolumeStroops: bigint;
+}
+
+export function calculateBatchSummary(items: BatchSimulationItem[]): BatchSimulationSummary {
+  let approvedCount = 0;
+  let escrowedCount = 0;
+  let blockedCount = 0;
+  let totalVolume = 0n;
+
+  for (const item of items) {
+    if (item.decision === 'APPROVE') approvedCount++;
+    else if (item.decision === 'FLAG') escrowedCount++;
+    else if (item.decision === 'BLOCK') blockedCount++;
+
+    if (item.amountStroops !== undefined && item.amountStroops !== null) {
+      totalVolume += typeof item.amountStroops === 'bigint' ? item.amountStroops : BigInt(item.amountStroops);
+    }
+  }
+
+  const total = items.length;
+  const approvalRatioPercent = total > 0 ? Math.round((approvedCount / total) * 100) : 0;
+
+  return {
+    total,
+    approvedCount,
+    escrowedCount,
+    blockedCount,
+    approvalRatioPercent,
+    totalVolumeStroops: totalVolume,
+  };
+}
