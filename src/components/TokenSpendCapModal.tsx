@@ -77,7 +77,7 @@ export const TokenSpendCapModal: React.FC<TokenSpendCapModalProps> = ({
         </div>
 
         <p className="text-xs text-slate-400 mb-4">
-          Configure individual spend caps for SAC tokens. Any transaction exceeding the asset's cap is routed to Escrow.
+          Configure individual spend caps for SAC tokens. Any transaction exceeding the asset&apos;s cap is routed to Escrow.
         </p>
 
         <div className="space-y-2 mb-5">
