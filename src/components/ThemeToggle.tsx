@@ -1,9 +1,8 @@
 /**
  * ThemeToggle.tsx
  *
- * Toggles between dark and light mode by manipulating the `dark` class on
- * <html>.  Persists the user's choice to localStorage under the key
- * 'safeguard-theme', and detects system preference on first load.
+ * Controls theme mode on <html>.
+ * Safeguard is an institutional dark terminal by default.
  */
 
 'use client';
@@ -17,30 +16,26 @@ type Theme = 'dark' | 'light';
 
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'dark';
-
   const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
   if (stored === 'dark' || stored === 'light') return stored;
-
-  // Respect OS preference on first visit
-  if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
   return 'dark';
 }
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
-  if (theme === 'dark') {
-    root.classList.add('dark');
-    root.classList.remove('light');
-  } else {
-    root.classList.remove('dark');
+  // Always maintain dark class for dark mode styling
+  root.classList.add('dark');
+  root.style.colorScheme = 'dark';
+  if (theme === 'light') {
     root.classList.add('light');
+  } else {
+    root.classList.remove('light');
   }
 }
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('dark');
 
-  // Initialise on client-side only (avoids SSR mismatch)
   useEffect(() => {
     const initial = getInitialTheme();
     setTheme(initial);
@@ -57,11 +52,11 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 dark:hover:bg-slate-700/60 transition-colors"
+      aria-label={`Switch theme (currently ${theme})`}
+      title={`Theme: ${theme === 'dark' ? 'Institutional Dark' : 'High Contrast'}`}
+      className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
     >
-      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {theme === 'dark' ? <Moon className="h-4 w-4 text-indigo-400" /> : <Sun className="h-4 w-4 text-amber-400" />}
     </button>
   );
 }

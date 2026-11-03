@@ -2,36 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Dark mode (default) ─────────────────────────────────────────────────── */
+/* ─── Institutional Dark Theme ────────────────────────────────────────────── */
 :root,
 .dark {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 10, 15, 29;
-  --background-end-rgb: 5, 8, 16;
-  --card-bg: rgba(15, 23, 42, 0.5);
-  --border-color: rgba(30, 27, 75, 0.6);
+  --foreground-rgb: 248, 250, 252;
+  --background-start-rgb: 15, 23, 42;
+  --background-end-rgb: 2, 6, 23;
+  --card-bg: rgba(15, 23, 42, 0.75);
+  --border-color: rgba(99, 102, 241, 0.2);
   --text-muted: rgb(148, 163, 184);
-  --surface-hover: rgba(30, 41, 59, 0.4);
+  --surface-hover: rgba(30, 41, 59, 0.6);
+  color-scheme: dark;
 }
 
-/* ─── Light mode ──────────────────────────────────────────────────────────── */
+/* ─── High-Contrast Mode ──────────────────────────────────────────────────── */
 .light {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 241, 245, 249;
-  --background-end-rgb: 226, 232, 240;
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --border-color: rgba(148, 163, 184, 0.35);
-  --text-muted: rgb(71, 85, 105);
-  --surface-hover: rgba(241, 245, 249, 0.8);
+  --foreground-rgb: 248, 250, 252;
+  --background-start-rgb: 15, 23, 42;
+  --background-end-rgb: 2, 6, 23;
+  --card-bg: rgba(15, 23, 42, 0.85);
+  --border-color: rgba(99, 102, 241, 0.25);
+  --text-muted: rgb(148, 163, 184);
+  --surface-hover: rgba(30, 41, 59, 0.6);
+  color-scheme: dark;
 }
 
 /* ─── Base styles ─────────────────────────────────────────────────────────── */
+html {
+  background-color: #020617;
+  color-scheme: dark;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
-  background: radial-gradient(
+  background-color: #020617;
+  background-image: radial-gradient(
     circle at top right,
-    rgba(var(--background-start-rgb), 1) 0%,
-    rgba(var(--background-end-rgb), 1) 100%
+    rgb(var(--background-start-rgb)) 0%,
+    rgb(var(--background-end-rgb)) 100%
   );
   min-height: 100vh;
   transition: background 0.3s ease, color 0.3s ease;
