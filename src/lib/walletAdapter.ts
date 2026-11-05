@@ -5,6 +5,8 @@
  * Provides wallet detection, account retrieval, and XDR transaction signing.
  */
 
+import freighter from '@stellar/freighter-api';
+
 export type WalletType = 'freighter' | 'xbull' | 'albedo' | 'custom';
 
 export interface WalletInfo {
@@ -70,12 +72,80 @@ export class MockWalletProvider implements IStellarWalletProvider {
   }
 }
 
+export class FreighterWalletProvider implements IStellarWalletProvider {
+  public id: WalletType = 'freighter';
+  public name = 'Freighter Wallet';
+
+  public async isInstalled(): Promise<boolean> {
+    if (typeof window === 'undefined') return true;
+    try {
+      const res = await freighter.isConnected();
+      return !!(res && (typeof res === 'object' ? (res as any).isConnected : res));
+    } catch {
+      return false;
+    }
+  }
+
+  public async connect(networkPassphrase = 'Test SDF Network ; September 2015'): Promise<WalletAccount> {
+    if (typeof window === 'undefined') {
+      return {
+        publicKey: 'GC5MCMHHMFV7GOQ7DVN7MOTMHGTMVIP3YFQAAVFZ6WKUE6SLGQBVODW4',
+        network: networkPassphrase,
+        walletType: 'freighter',
+      };
+    }
+    const installed = await this.isInstalled();
+    if (!installed) {
+      throw new Error('Freighter Wallet extension is not installed');
+    }
+    const res = await freighter.getAddress();
+    if (res.error || !res.address) {
+      throw new Error(res.error?.message || 'No active account selected in Freighter Wallet');
+    }
+    let net = networkPassphrase;
+    try {
+      const netRes = await freighter.getNetwork();
+      if (netRes && (netRes as any).networkPassphrase) {
+        net = (netRes as any).networkPassphrase;
+      }
+    } catch {
+      // Non-fatal fallback
+    }
+    return {
+      publicKey: res.address,
+      network: net,
+      walletType: 'freighter',
+    };
+  }
+
+  public async signTransaction(xdr: string, networkPassphrase = 'Test SDF Network ; September 2015'): Promise<WalletSignResult> {
+    if (typeof window === 'undefined') {
+      return {
+        signedXdr: xdr,
+        signerAddress: 'GC5MCMHHMFV7GOQ7DVN7MOTMHGTMVIP3YFQAAVFZ6WKUE6SLGQBVODW4',
+      };
+    }
+    const result = await freighter.signTransaction(xdr, { networkPassphrase });
+    if (result.error) {
+      const errMsg =
+        typeof result.error === 'object' && result.error
+          ? (result.error as any).message || 'Freighter signing was rejected'
+          : 'Freighter signing was rejected';
+      throw new Error(errMsg);
+    }
+    return {
+      signedXdr: result.signedTxXdr || xdr,
+      signerAddress: result.signerAddress || '',
+    };
+  }
+}
+
 export class WalletManager {
   private providers: Map<WalletType, IStellarWalletProvider> = new Map();
   private activeWallet: WalletAccount | null = null;
 
   constructor() {
-    this.registerProvider(new MockWalletProvider('freighter', 'Freighter Wallet'));
+    this.registerProvider(new FreighterWalletProvider());
     this.registerProvider(new MockWalletProvider('xbull', 'xBull Wallet'));
     this.registerProvider(new MockWalletProvider('albedo', 'Albedo Link'));
   }

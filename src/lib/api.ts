@@ -8,7 +8,10 @@
 
 import { TxItem } from '@/types/tx';
 
-const BACKEND_BASE = 'http://localhost:4000';
+export const BACKEND_BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:4000';
 
 /** Seeded fallback transactions shown when the backend is unreachable */
 export const FALLBACK_TRANSACTIONS: TxItem[] = [

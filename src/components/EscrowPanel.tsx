@@ -12,6 +12,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Lock, RefreshCw, CheckCircle2, RotateCcw, Clock, Loader2, ExternalLink, Download } from 'lucide-react';
 import { formatEscrowsAsCsv, formatEscrowsAsJson } from '../lib/escrowExport';
 import { executeLiveEscrowAction } from '../lib/stellarTx';
+import { BACKEND_BASE } from '../lib/api';
 
 interface EscrowRecord {
   id: string;
@@ -52,7 +53,7 @@ async function fetchEscrows(): Promise<EscrowRecord[]> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch('http://localhost:4000/api/escrows', {
+    const res = await fetch(`${BACKEND_BASE}/api/escrows`, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     });
