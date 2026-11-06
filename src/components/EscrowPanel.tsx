@@ -127,7 +127,7 @@ export default function EscrowPanel({ walletConnected, userAddress }: EscrowPane
     load();
   }, [load]);
 
-  const handleAction = async (escrow: EscrowRecord, action: 'release' | 'refund') => {
+  const handleAction = async (escrow: EscrowRecord, action: 'release' | 'refund' | 'claim') => {
     if (!walletConnected || !userAddress) return;
 
     setActionLoading(`${escrow.id}-${action}`);
@@ -144,7 +144,7 @@ export default function EscrowPanel({ walletConnected, userAddress }: EscrowPane
         setActioned((prev) => new Set(prev).add(escrow.id));
         setEscrows((prev) =>
           prev.map((e) =>
-            e.id === escrow.id ? { ...e, status: action === 'release' ? 'Released' : 'Refunded' } : e
+            e.id === escrow.id ? { ...e, status: action === 'release' || action === 'claim' ? 'Released' : 'Refunded' } : e
           )
         );
         setActionStatus({ id: escrow.id, txHash: result.txHash });
@@ -153,7 +153,7 @@ export default function EscrowPanel({ walletConnected, userAddress }: EscrowPane
         setActioned((prev) => new Set(prev).add(escrow.id));
         setEscrows((prev) =>
           prev.map((e) =>
-            e.id === escrow.id ? { ...e, status: action === 'release' ? 'Released' : 'Refunded' } : e
+            e.id === escrow.id ? { ...e, status: action === 'release' || action === 'claim' ? 'Released' : 'Refunded' } : e
           )
         );
         setActionStatus({ id: escrow.id, error: result.reason || 'Simulated action performed' });
@@ -275,6 +275,21 @@ export default function EscrowPanel({ walletConnected, userAddress }: EscrowPane
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="flex items-center space-x-2">
+                      {userAddress === escrow.recipient && (
+                        <button
+                          disabled={!walletConnected || !!actionLoading}
+                          onClick={() => handleAction(escrow, 'claim')}
+                          title={walletConnected ? 'Claim funds as recipient' : 'Connect Freighter to execute'}
+                          className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {actionLoading === `${escrow.id}-claim` ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-3 w-3" />
+                          )}
+                          <span>Claim</span>
+                        </button>
+                      )}
                       <button
                         disabled={!walletConnected || !!actionLoading}
                         onClick={() => handleAction(escrow, 'release')}

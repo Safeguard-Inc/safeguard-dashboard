@@ -130,7 +130,7 @@ export async function executeLivePayment(params: {
 export async function executeLiveEscrowAction(params: {
   callerAddress: string;
   escrowId: number;
-  action: 'release' | 'refund';
+  action: 'release' | 'refund' | 'claim';
 }): Promise<TxExecutionResult> {
   const connected = await isConnected().catch(() => false);
   if (!connected) {
@@ -145,16 +145,25 @@ export async function executeLiveEscrowAction(params: {
     const account = await sorobanServer.getAccount(params.callerAddress);
     const contract = new Contract(CONTRACT_IDS.SAFEGUARD_PAYMENTS);
 
-    const op = params.action === 'release'
-      ? contract.call(
-          'release_escrow',
-          nativeToScVal(BigInt(params.escrowId), { type: 'u64' })
-        )
-      : contract.call(
-          'refund_escrow',
-          new Address(params.callerAddress).toScVal(),
-          nativeToScVal(BigInt(params.escrowId), { type: 'u64' })
-        );
+    let op;
+    if (params.action === 'release') {
+      op = contract.call(
+        'release_escrow',
+        nativeToScVal(BigInt(params.escrowId), { type: 'u64' })
+      );
+    } else if (params.action === 'claim') {
+      op = contract.call(
+        'claim_escrow',
+        new Address(params.callerAddress).toScVal(),
+        nativeToScVal(BigInt(params.escrowId), { type: 'u64' })
+      );
+    } else {
+      op = contract.call(
+        'refund_escrow',
+        new Address(params.callerAddress).toScVal(),
+        nativeToScVal(BigInt(params.escrowId), { type: 'u64' })
+      );
+    }
 
     const rawTx = new TransactionBuilder(account, {
       fee: BASE_FEE,
