@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchLiveConfig } from '@/lib/contractConfig';
 import { checkIsDenylisted } from '@/lib/denylistCheck';
-import { fetchTransactions, FALLBACK_TRANSACTIONS } from '@/lib/api';
+import { fetchTransactions, FALLBACK_TRANSACTIONS, BACKEND_BASE } from '@/lib/api';
 import type { TxItem } from '@/types/tx';
 import EscrowPanel from '@/components/EscrowPanel';
 import { executeLivePayment, XLM_SAC_ID, fetchLiveAccountBalance } from '@/lib/stellarTx';
@@ -318,6 +318,60 @@ export default function Dashboard() {
       setDenylistWarning(
         `⚠ On-chain denylist hit: ${recipient.substring(0, 8)}…${recipient.substring(recipient.length - 4)} is flagged in the live contract state.`
       );
+    }
+
+    // Attempt live backend pre-flight policy simulation via /api/pay/simulate
+    try {
+      const simController = new AbortController();
+      const simTimeout = setTimeout(() => simController.abort(), 2000);
+      const stroopsAmount = Math.round(numAmount * 10_000_000).toString();
+      const simRes = await fetch(`${BACKEND_BASE}/api/pay/simulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: simController.signal,
+        body: JSON.stringify({
+          sender: userAddress,
+          recipient,
+          token: token === 'XLM' ? XLM_SAC_ID : token,
+          amount: stroopsAmount,
+        }),
+      });
+      clearTimeout(simTimeout);
+      if (simRes.ok) {
+        const simPayload = await simRes.json();
+        if (simPayload.success && simPayload.data) {
+          const simData = simPayload.data;
+          const status = simData.decision === 'APPROVE' ? 'Approved' as const : simData.decision === 'FLAG' ? 'Escrowed' as const : 'Blocked' as const;
+          const verdictObj = {
+            status,
+            reason: simData.reason,
+            code: simData.reasonCode || 0,
+            txHash: status === 'Approved' ? 'pre-flight verified (0 fee)' : status === 'Escrowed' ? 'diverted to escrow hold' : 'rejected at simulation (no fee)',
+            amount,
+            token,
+            escrowId: simData.isEscrow ? Math.floor(Math.random() * 800) + 10 : undefined,
+          };
+          setVerdict(verdictObj);
+          setTransactions((prev) => [
+            {
+              id: `tx-${Date.now()}`,
+              sender: userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 4),
+              recipient: recipient.substring(0, 8) + '...' + recipient.substring(recipient.length - 4),
+              token,
+              amount: numAmount.toLocaleString(),
+              status: verdictObj.status,
+              reason: verdictObj.reason,
+              timestamp: 'Just now',
+              txHash: verdictObj.txHash,
+            },
+            ...prev,
+          ]);
+          setIsProcessing(false);
+          return;
+        }
+      }
+    } catch {
+      // Gracefully fall through to local simulation fallback
     }
 
     // Simulate with a brief delay to represent contract invocation round-trip

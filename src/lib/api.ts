@@ -69,12 +69,19 @@ export async function fetchTransactions(): Promise<TxItem[]> {
 
     if (!res.ok) return FALLBACK_TRANSACTIONS;
 
-    const data: unknown = await res.json();
+    const raw: any = await res.json();
+    const rows = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.data)
+      ? raw.data
+      : Array.isArray(raw?.items)
+      ? raw.items
+      : null;
 
-    if (!Array.isArray(data)) return FALLBACK_TRANSACTIONS;
+    if (!rows) return FALLBACK_TRANSACTIONS;
 
     // Map backend shape → TxItem (gracefully handle field name differences)
-    return (data as Record<string, unknown>[]).map((row, i) => ({
+    return (rows as Record<string, unknown>[]).map((row, i) => ({
       id: String(row['id'] ?? row['_id'] ?? `tx-remote-${i}`),
       sender: String(row['sender'] ?? ''),
       recipient: String(row['recipient'] ?? ''),

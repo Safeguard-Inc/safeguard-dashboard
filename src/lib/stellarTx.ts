@@ -145,11 +145,16 @@ export async function executeLiveEscrowAction(params: {
     const account = await sorobanServer.getAccount(params.callerAddress);
     const contract = new Contract(CONTRACT_IDS.SAFEGUARD_PAYMENTS);
 
-    const methodName = params.action === 'release' ? 'release_escrow' : 'refund_escrow';
-    const op = contract.call(
-      methodName,
-      nativeToScVal(BigInt(params.escrowId), { type: 'u64' })
-    );
+    const op = params.action === 'release'
+      ? contract.call(
+          'release_escrow',
+          nativeToScVal(BigInt(params.escrowId), { type: 'u64' })
+        )
+      : contract.call(
+          'refund_escrow',
+          new Address(params.callerAddress).toScVal(),
+          nativeToScVal(BigInt(params.escrowId), { type: 'u64' })
+        );
 
     const rawTx = new TransactionBuilder(account, {
       fee: BASE_FEE,
