@@ -41,16 +41,19 @@ jobs:
             console.log('Dashboard error catalog synced with 270 codes.');
           "
 
-      - name: "[5/10] Compile Next.js 14 Production Bundle"
+      - name: "[5/10] Run Dashboard Unit Tests"
+        run: npm run test
+
+      - name: "[6/10] Compile Next.js 14 Production Bundle"
         run: npm run build
 
-      - name: "[6/10] Verify Static Generation & Route Manifests"
+      - name: "[7/10] Verify Static Generation & Route Manifests"
         run: |
           test -f .next/BUILD_ID || (echo "Missing .next/BUILD_ID" && exit 1)
           test -f .next/routes-manifest.json || (echo "Missing routes-manifest" && exit 1)
           echo "Next.js production build artifacts verified."
 
-      - name: "[7/10] Validate First-Load JS Budget (< 250KB)"
+      - name: "[8/10] Validate First-Load JS Budget (< 250KB)"
         run: |
           node -e "
             const fs = require('fs');
@@ -58,17 +61,17 @@ jobs:
             console.log('Build manifest verified with ' + Object.keys(manifest.pages).length + ' pages.');
           "
 
-      - name: "[8/10] Dependency Security Audit"
+      - name: "[9/10] Dependency Security Audit"
         run: npm audit --audit-level=critical || true
 
-      - name: "[9/10] Validate Open Source Governance & Docs"
+      - name: "[10/10] Validate Open Source Governance & Docs"
         run: |
           test -f LICENSE || (echo "Missing LICENSE" && exit 1)
           test -f CONTRIBUTING.md || (echo "Missing CONTRIBUTING.md" && exit 1)
           test -f docs/ERROR_CODES.md || (echo "Missing docs/ERROR_CODES.md" && exit 1)
           echo "Governance documentation verified."
 
-      - name: "[10/10] Verify Live Vercel Production Health"
+      - name: "[11/11] Verify Live Vercel Production Health"
         run: |
           curl -f -s -I "https://safeguard-dashboard-mocha.vercel.app" | grep -i "HTTP/"
           echo "Live Vercel production deployment verified online."
