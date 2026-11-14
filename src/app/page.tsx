@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchLiveConfig } from '@/lib/contractConfig';
 import { checkIsDenylisted } from '@/lib/denylistCheck';
 import { fetchTransactions, FALLBACK_TRANSACTIONS, BACKEND_BASE } from '@/lib/api';
+import { loadPersistedTransactions, persistTransactions } from '@/lib/txStorage';
 import type { TxItem } from '@/types/tx';
 import EscrowPanel from '@/components/EscrowPanel';
 import { executeLivePayment, XLM_SAC_ID, fetchLiveAccountBalance } from '@/lib/stellarTx';
@@ -72,6 +73,18 @@ export default function Dashboard() {
 
   // Transactions list — seeded with fallback data, replaced by live API on mount
   const [transactions, setTransactions] = useState<TxItem[]>(FALLBACK_TRANSACTIONS);
+  const [txStorageHydrated, setTxStorageHydrated] = useState(false);
+
+  useEffect(() => {
+    setTransactions((prev) => loadPersistedTransactions(prev));
+    setTxStorageHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (txStorageHydrated) {
+      persistTransactions(transactions);
+    }
+  }, [transactions, txStorageHydrated]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [secondsAgo, setSecondsAgo] = useState<number>(0);
   const [userBalance, setUserBalance] = useState<string | null>(null);
